@@ -281,7 +281,8 @@ class RecordEpisode(gym.Wrapper):
             self._h5_file = h5py.File(self.output_dir / str(self.subtask_idx) / f"{trajectory_name}.h5", "w")
 
             # Use a separate json to store non-array data
-            self._json_path = self._h5_file.filename.replace(".h5", ".json")
+            # self._json_path = self._h5_file.filename.replace(".h5", ".json")
+            self._json_path = Path(self._h5_file.filename).parent / "metadata.json"
             self._json_data = dict(
                 env_info=parse_env_info(self.env),
                 commit_info=get_commit_info(),

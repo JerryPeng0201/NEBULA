@@ -50,7 +50,7 @@ def _main(args, proc_id: int = 0, start_seed: int = 0) -> str:
         raise RuntimeError(f"No already written motion planning solutions for {env_id}. Available options are {list(SOLUTIONS_CONFIG.keys())}")
 
     if not args.traj_name:
-        new_traj_name = time.strftime("%Y%m%d_%H%M%S")
+        new_traj_name = "trajectory" #time.strftime("%Y%m%d_%H%M%S")
     else:
         new_traj_name = args.traj_name
 
