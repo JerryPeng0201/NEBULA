@@ -8,6 +8,7 @@ from nebula.data.generation.motionplanning.panda.solutions import *
 SOLUTIONS_CONFIG = {
    # ===== CONTROL SOLUTIONS =====
    "Control-PlaceSphere-Easy": ControlEasyPlaceSphereSolution,
-   "Control-PushCube-Easy": ControlPushCubeEasySolution
+   "Control-PushCube-Easy": ControlPushCubeEasySolution,
+   "Control-StackCube-Easy": ControlStackCubeEasySolution
 }
 

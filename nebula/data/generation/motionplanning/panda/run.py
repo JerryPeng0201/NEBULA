@@ -12,7 +12,7 @@ import os.path as osp
 import functools, inspect, importlib
 from nebula.utils.wrappers.record import RecordEpisode
 from nebula.trajectory.merge_trajectory import merge_trajectories
-from nebula.data.generation.motionplanning.panda.mp_solutions_config import SOLUTIONS_CONFIG
+from nebula.data.generation.motionplanning.panda.config import SOLUTIONS_CONFIG
 
 
 def parse_args(args=None):
