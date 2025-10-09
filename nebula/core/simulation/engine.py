@@ -413,12 +413,14 @@ class BaseEnv(gym.Env):
                             f"Agent {robot_uid} not found in the dict of registered agents. If the id is not a typo then make sure to apply the @register_agent() decorator."
                         )
                     agent_cls = REGISTERED_AGENTS[robot_uid].agent_cls
+                # Provide default initial pose if not specified to avoid warning
+                agent_initial_pose = initial_agent_poses[i] if (initial_agent_poses is not None and i < len(initial_agent_poses) and initial_agent_poses[i] is not None) else sapien.Pose()
                 agent: BaseAgent = agent_cls(
                     self.scene,
                     self._control_freq,
                     self._control_mode,
                     agent_idx=i if len(robot_uids) > 1 else None,
-                    initial_pose=initial_agent_poses[i] if initial_agent_poses is not None else None,
+                    initial_pose=agent_initial_pose,
                     build_separate=build_separate,
                 )
                 agents.append(agent)

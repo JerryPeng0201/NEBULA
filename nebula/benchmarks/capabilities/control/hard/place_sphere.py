@@ -193,6 +193,9 @@ class ControlPlaceSphereHardEnv(BaseEnv):
             material.set_base_color(color)
             builder.add_box_visual(pose, half_size, material=material)
 
+        # Set initial pose to avoid warning (actual pose will be set in _initialize_episode)
+        builder.initial_pose = sapien.Pose()
+        
         # build the kinematic bin
         return builder.build_kinematic(name=f"{color_name}_bin")
 
