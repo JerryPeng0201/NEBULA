@@ -1,1 +1,2 @@
 from .place_sphere import ControlEasyPlaceSphereSolution
+from .push_cube import ControlPushCubeEasySolution

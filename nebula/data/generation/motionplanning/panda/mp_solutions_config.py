@@ -5,8 +5,9 @@ This file contains the mapping of task names to their corresponding solution fun
 
 from nebula.data.generation.motionplanning.panda.solutions import *
 
-MP_SOLUTIONS = {
+SOLUTIONS_CONFIG = {
    # ===== CONTROL SOLUTIONS =====
-   "Control-PlaceSphere-Easy": ControlEasyPlaceSphereSolution
+   "Control-PlaceSphere-Easy": ControlEasyPlaceSphereSolution,
+   "Control-PushCube-Easy": ControlPushCubeEasySolution
 }
 

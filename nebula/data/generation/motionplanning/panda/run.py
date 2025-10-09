@@ -12,12 +12,12 @@ import os.path as osp
 import functools, inspect, importlib
 from nebula.utils.wrappers.record import RecordEpisode
 from nebula.trajectory.merge_trajectory import merge_trajectories
-from nebula.data.generation.motionplanning.panda.mp_solutions_config import MP_SOLUTIONS
+from nebula.data.generation.motionplanning.panda.mp_solutions_config import SOLUTIONS_CONFIG
 
 
 def parse_args(args=None):
     parser = argparse.ArgumentParser()
-    parser.add_argument("-e", "--env-id", type=str, default="Control-PlaceSphere-Easy", help=f"Environment to run motion planning solver on. Available options are {list(MP_SOLUTIONS.keys())}")
+    parser.add_argument("-e", "--env-id", type=str, default="Control-PlaceSphere-Easy", help=f"Environment to run motion planning solver on. Available options are {list(SOLUTIONS_CONFIG.keys())}")
     parser.add_argument("-o", "--obs-mode", type=str, default="none", help="Observation mode to use. Usually this is kept as 'none' as observations are not necesary to be stored, they can be replayed later via the mani_skill.trajectory.replay_trajectory script.")
     parser.add_argument("-n", "--num-traj", type=int, default=10, help="Number of trajectories to generate.")
     parser.add_argument("--only-count-success", action="store_true", help="If true, generates trajectories until num_traj of them are successful and only saves the successful trajectories/videos")
@@ -46,8 +46,8 @@ def _main(args, proc_id: int = 0, start_seed: int = 0) -> str:
         sim_backend=args.sim_backend,
         reconfiguration_freq=1,
     )
-    if env_id not in MP_SOLUTIONS:
-        raise RuntimeError(f"No already written motion planning solutions for {env_id}. Available options are {list(MP_SOLUTIONS.keys())}")
+    if env_id not in SOLUTIONS_CONFIG:
+        raise RuntimeError(f"No already written motion planning solutions for {env_id}. Available options are {list(SOLUTIONS_CONFIG.keys())}")
 
     if not args.traj_name:
         new_traj_name = time.strftime("%Y%m%d_%H%M%S")
@@ -69,7 +69,7 @@ def _main(args, proc_id: int = 0, start_seed: int = 0) -> str:
         save_on_reset=True
     )
     output_h5_path = env._h5_file.filename
-    solve = MP_SOLUTIONS[env_id]
+    solve = SOLUTIONS_CONFIG[env_id]
     print(f"Motion Planning Running on {env_id}")
     pbar = tqdm(range(args.num_traj), desc=f"proc_id: {proc_id}")
     seed = start_seed
