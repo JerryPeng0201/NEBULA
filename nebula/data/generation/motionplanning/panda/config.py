@@ -12,6 +12,7 @@ SOLUTIONS_CONFIG = {
    "Control-StackCube-Easy": ControlStackCubeEasySolution,
    "Control-PegInsertionSide-Medium": ControlPegInsertionSideMediumSolution,
    "Control-PlaceSphere-Medium": ControlPlaceSphereMediumSolution,
-   "Control-StackCube-Medium": ControlStackCubeMediumSolution
+   "Control-StackCube-Medium": ControlStackCubeMediumSolution,
+   "Control-PlaceSphere-Hard": ControlPlaceSphereHardSolution,
 }
 

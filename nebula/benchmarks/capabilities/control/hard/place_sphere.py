@@ -20,20 +20,21 @@ from nebula.utils.structs import Pose
 from nebula.utils.structs.types import Array, GPUMemoryConfig, SimConfig
 
 
-@register_env("Control-PlaceSphere-Hard", max_episode_steps=50)
+@register_env("Control-PlaceSphere-Hard", max_episode_steps=100)
 class ControlPlaceSphereHardEnv(BaseEnv):
     """
     **Task Description:**
-    Place the sphere into the specified target bin (red, yellow, or blue) based on the task instruction.
+    Place the sphere into three bins sequentially: yellow bin → red bin → blue bin.
 
     **Randomizations:**
-    - The target bin is randomly selected at the start of each episode
-    - The sphere is initialized in [-0.1, -0.05] x [-0.1, 0.1]
-    - The bins are in fixed positions at y = -0.067, 0, 0.067
+    - The sphere is initialized at a fixed position
+    - The bins are in fixed positions at y = 0 (yellow), -0.067 (red), 0.067 (blue)
 
     **Success Conditions:**
-    - The sphere is placed on the top of the TARGET bin specified in the instruction. 
-    - The robot remains static and the gripper is not closed at the end state.
+    - The sphere must be placed in the yellow bin first
+    - Then moved to the red bin
+    - Finally moved to the blue bin
+    - The gripper must be open (not grasping) at each placement
     """
 
     _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/PlaceSphere-v1_rt.mp4"
@@ -59,8 +60,6 @@ class ControlPlaceSphereHardEnv(BaseEnv):
 
     def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, **kwargs):
         self.robot_init_qpos_noise = robot_init_qpos_noise
-        # Initialize target bin color to None - will be set during reset
-        self.target_bin_color = None
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
 
     @property
@@ -232,19 +231,6 @@ class ControlPlaceSphereHardEnv(BaseEnv):
 
     def _initialize_episode(self, env_idx: torch.Tensor, options: dict):
         with torch.device(self.device):
-            # Extract target bin color from task instruction if available
-            task_instruction = options.get("task_instruction", "")
-            if "red bin" in task_instruction:
-                self.target_bin_color = "red"
-            elif "yellow bin" in task_instruction:
-                self.target_bin_color = "yellow"
-            elif "blue bin" in task_instruction:
-                self.target_bin_color = "blue"
-            else:
-                # Fallback: randomly select target if not specified in instruction
-                import random
-                self.target_bin_color = random.choice(self.bin_colors)
-
             # init the table scene
             b = len(env_idx)
             self.table_scene.initialize(env_idx)
@@ -259,97 +245,120 @@ class ControlPlaceSphereHardEnv(BaseEnv):
             self.obj.set_pose(obj_pose)
 
             # init the three bins on the same line along the x-axis with fixed positions
-            # Red bin positioned at y = -0.067, yellow bin at y = 0, Blue bin at y = 0.067
+            # Yellow bin at y = 0 (center), Red bin at y = -0.067, Blue bin at y = 0.067
             
-            # Red bin position (fixed)
-            red_pos = torch.zeros((b, 3))
-            red_pos[:, 0] = 0.05  # fixed x position
-            red_pos[:, 1] = -0.067  # fixed y position for red bin
-            red_pos[:, 2] = self.block_half_size[0]  # on the table
-            red_bin_pose = Pose.create_from_pq(p=red_pos, q=[1, 0, 0, 0])
-            self.red_bin.set_pose(red_bin_pose)
-
-            # yellow bin position (fixed)
+            # Yellow bin position (fixed) - center
             yellow_pos = torch.zeros((b, 3))
-            yellow_pos[:, 0] = 0.05  # fixed x position (same as red bin)
+            yellow_pos[:, 0] = 0.05  # fixed x position
             yellow_pos[:, 1] = 0.0  # fixed y position for yellow bin (center)
             yellow_pos[:, 2] = self.block_half_size[0]  # on the table
             yellow_bin_pose = Pose.create_from_pq(p=yellow_pos, q=[1, 0, 0, 0])
             self.yellow_bin.set_pose(yellow_bin_pose)
 
+            # Red bin position (fixed)
+            red_pos = torch.zeros((b, 3))
+            red_pos[:, 0] = 0.05  # fixed x position (same as yellow bin)
+            red_pos[:, 1] = -0.067  # fixed y position for red bin
+            red_pos[:, 2] = self.block_half_size[0]  # on the table
+            red_bin_pose = Pose.create_from_pq(p=red_pos, q=[1, 0, 0, 0])
+            self.red_bin.set_pose(red_bin_pose)
+
             # Blue bin position (fixed)
             blue_pos = torch.zeros((b, 3))
-            blue_pos[:, 0] = 0.05  # fixed x position (same as red bin)
+            blue_pos[:, 0] = 0.05  # fixed x position (same as yellow bin)
             blue_pos[:, 1] = 0.067  # fixed y position for blue bin
             blue_pos[:, 2] = self.block_half_size[0]  # on the table
             blue_bin_pose = Pose.create_from_pq(p=blue_pos, q=[1, 0, 0, 0])
             self.blue_bin.set_pose(blue_bin_pose)
 
+            # Task phase tracking: 0=initial, 1=yellow placed, 2=red placed, 3=blue placed (complete)
+            self.task_phase = torch.zeros(len(env_idx), dtype=torch.int32, device=self.device)
+            self.has_placed_in_yellow = torch.zeros(len(env_idx), dtype=torch.bool, device=self.device)
+            self.has_placed_in_red = torch.zeros(len(env_idx), dtype=torch.bool, device=self.device)
+            self.has_placed_in_blue = torch.zeros(len(env_idx), dtype=torch.bool, device=self.device)
+
     def evaluate(self):
         pos_obj = self.obj.pose.p
         
         # Check if object is on each of the three bins
-        is_obj_on_red_bin = self._check_obj_on_bin(pos_obj, self.red_bin.pose.p)
         is_obj_on_yellow_bin = self._check_obj_on_bin(pos_obj, self.yellow_bin.pose.p)
+        is_obj_on_red_bin = self._check_obj_on_bin(pos_obj, self.red_bin.pose.p)
         is_obj_on_blue_bin = self._check_obj_on_bin(pos_obj, self.blue_bin.pose.p)
         
-        # Check if object is on any bin (for general tracking)
-        is_obj_on_any_bin = torch.logical_or(
-            torch.logical_or(is_obj_on_red_bin, is_obj_on_yellow_bin), 
-            is_obj_on_blue_bin
-        )
-        
-        # Check if object is on the TARGET bin specifically
-        if self.target_bin_color == "red":
-            is_obj_on_target_bin = is_obj_on_red_bin
-        elif self.target_bin_color == "yellow":
-            is_obj_on_target_bin = is_obj_on_yellow_bin
-        elif self.target_bin_color == "blue":
-            is_obj_on_target_bin = is_obj_on_blue_bin
-        else:
-            # Fallback if target_bin_color is not set properly
-            is_obj_on_target_bin = torch.zeros_like(is_obj_on_red_bin, dtype=torch.bool)
-        
-        is_obj_static = self.obj.is_static(lin_thresh=1e-2, ang_thresh=0.5)
         is_obj_grasped = self.agent.is_grasping(self.obj)
         
-        # Success is only when object is on TARGET bin, static, and not grasped
-        success = is_obj_on_target_bin & is_obj_static & (~is_obj_grasped)
+        # Phase 0 → 1: Yellow bin placement
+        yellow_placement_success = (self.task_phase == 0) & is_obj_on_yellow_bin & (~is_obj_grasped)
+        self.has_placed_in_yellow = torch.where(
+            yellow_placement_success,
+            torch.ones_like(self.has_placed_in_yellow),
+            self.has_placed_in_yellow
+        )
+        self.task_phase = torch.where(
+            yellow_placement_success,
+            torch.ones_like(self.task_phase),
+            self.task_phase
+        )
+        
+        # Phase 1 → 2: Red bin placement
+        red_placement_success = (self.task_phase == 1) & is_obj_on_red_bin & (~is_obj_grasped)
+        self.has_placed_in_red = torch.where(
+            red_placement_success,
+            torch.ones_like(self.has_placed_in_red),
+            self.has_placed_in_red
+        )
+        self.task_phase = torch.where(
+            red_placement_success,
+            torch.full_like(self.task_phase, 2),
+            self.task_phase
+        )
+        
+        # Phase 2 → 3: Blue bin placement
+        blue_placement_success = (self.task_phase == 2) & is_obj_on_blue_bin & (~is_obj_grasped)
+        self.has_placed_in_blue = torch.where(
+            blue_placement_success,
+            torch.ones_like(self.has_placed_in_blue),
+            self.has_placed_in_blue
+        )
+        self.task_phase = torch.where(
+            blue_placement_success,
+            torch.full_like(self.task_phase, 3),
+            self.task_phase
+        )
+        
+        # Success when all three placements are complete
+        success = self.has_placed_in_yellow & self.has_placed_in_red & self.has_placed_in_blue
         
         return {
             "is_obj_grasped": is_obj_grasped,
-            "is_obj_on_red_bin": is_obj_on_red_bin,
             "is_obj_on_yellow_bin": is_obj_on_yellow_bin,
+            "is_obj_on_red_bin": is_obj_on_red_bin,
             "is_obj_on_blue_bin": is_obj_on_blue_bin,
-            "is_obj_on_any_bin": is_obj_on_any_bin,
-            "is_obj_on_target_bin": is_obj_on_target_bin,
-            "is_obj_static": is_obj_static,
-            "target_bin_color": self.target_bin_color,
+            "task_phase": self.task_phase,
+            "has_placed_in_yellow": self.has_placed_in_yellow,
+            "has_placed_in_red": self.has_placed_in_red,
+            "has_placed_in_blue": self.has_placed_in_blue,
             "success": success,
         }
 
     def _check_obj_on_bin(self, pos_obj, pos_bin):
         """Check if object is on top of a specific bin"""
         offset = pos_obj - pos_bin
-        xy_flag = torch.linalg.norm(offset[..., :2], axis=1) <= 0.005
+        # Relaxed tolerances for motion planning (20mm XY, 15mm Z)
+        xy_flag = torch.linalg.norm(offset[..., :2], axis=1) <= 0.020
         z_flag = (
-            torch.abs(offset[..., 2] - self.radius - self.block_half_size[0]) <= 0.005
+            torch.abs(offset[..., 2] - self.radius - self.block_half_size[0]) <= 0.015
         )
         return torch.logical_and(xy_flag, z_flag)
-    
-    def _get_target_bin_id(self):
-        """Convert target bin color to numeric ID"""
-        color_to_id = {"red": 0, "yellow": 1, "blue": 2}
-        return color_to_id.get(self.target_bin_color, 0)
 
     def _get_obs_extra(self, info: Dict):
         obs = dict(
             is_grasped=info["is_obj_grasped"],
             tcp_pose=self.agent.tcp.pose.raw_pose,
-            red_bin_pos=self.red_bin.pose.p,
             yellow_bin_pos=self.yellow_bin.pose.p,
+            red_bin_pos=self.red_bin.pose.p,
             blue_bin_pos=self.blue_bin.pose.p,
-            target_bin_color=self._get_target_bin_id(),
+            task_phase=info["task_phase"],
         )
         if "state" in self.obs_mode:
             obs.update(
@@ -359,53 +368,52 @@ class ControlPlaceSphereHardEnv(BaseEnv):
         return obs
 
     def compute_dense_reward(self, obs: Any, action: torch.Tensor, info: Dict):
-        # reaching reward
         tcp_pose = self.agent.tcp.pose.p
         obj_pos = self.obj.pose.p
-        obj_to_tcp_dist = torch.linalg.norm(tcp_pose - obj_pos, axis=1)
-        reward = 2 * (1 - torch.tanh(5 * obj_to_tcp_dist))
-
-        # grasp and place reward - reward for getting close to TARGET bin only
-        if self.target_bin_color == "red":
-            target_bin = self.red_bin
-        elif self.target_bin_color == "yellow":
-            target_bin = self.yellow_bin
-        elif self.target_bin_color == "blue":
-            target_bin = self.blue_bin
-        else:
-            target_bin = self.yellow_bin  # fallback
-
-        target_bin_top_pos = target_bin.pose.p.clone()
-        target_bin_top_pos[:, 2] = target_bin_top_pos[:, 2] + self.block_half_size[0] + self.radius
-        obj_to_target_bin_dist = torch.linalg.norm(target_bin_top_pos - obj_pos, axis=1)
         
-        place_reward = 1 - torch.tanh(5.0 * obj_to_target_bin_dist)
-        reward[info["is_obj_grasped"]] = (4 + place_reward)[info["is_obj_grasped"]]
-
-        # ungrasp and static reward - only when on target bin
-        gripper_width = (self.agent.robot.get_qlimits()[0, -1, 1] * 2).to(self.device)
-        is_obj_grasped = info["is_obj_grasped"]
-        ungrasp_reward = (
-            torch.sum(self.agent.robot.get_qpos()[:, -2:], axis=1) / gripper_width
-        )
-        ungrasp_reward[
-            ~is_obj_grasped
-        ] = 16.0  # give ungrasp a bigger reward, so that it exceeds the robot static reward and the gripper can close
-        v = torch.linalg.norm(self.obj.linear_velocity, axis=1)
-        av = torch.linalg.norm(self.obj.angular_velocity, axis=1)
-        static_reward = 1 - torch.tanh(v * 10 + av)
-        robot_static_reward = self.agent.is_static(
-            0.2
-        )  # keep the robot static at the end state, since the sphere may spin when being placed on top
-        reward[info["is_obj_on_target_bin"]] = (
-            6 + (ungrasp_reward + static_reward + robot_static_reward) / 3.0
-        )[info["is_obj_on_target_bin"]]
-
-        # success reward - only for target bin
-        reward[info["success"]] = 13
+        # Base reaching reward
+        obj_to_tcp_dist = torch.linalg.norm(tcp_pose - obj_pos, axis=1)
+        reaching_reward = 2 * (1 - torch.tanh(5 * obj_to_tcp_dist))
+        reward = reaching_reward.clone()
+        
+        # Phase 0: Reward for moving towards yellow bin
+        yellow_bin_top_pos = self.yellow_bin.pose.p.clone()
+        yellow_bin_top_pos[:, 2] += self.block_half_size[0] + self.radius
+        obj_to_yellow_dist = torch.linalg.norm(yellow_bin_top_pos - obj_pos, axis=1)
+        
+        phase_0_mask = info["task_phase"] == 0
+        if phase_0_mask.any():
+            yellow_placement_reward = 1 - torch.tanh(5.0 * obj_to_yellow_dist)
+            reward[phase_0_mask & info["is_obj_grasped"]] = (4 + yellow_placement_reward)[phase_0_mask & info["is_obj_grasped"]]
+            reward[phase_0_mask & info["is_obj_on_yellow_bin"] & (~info["is_obj_grasped"])] = 10
+        
+        # Phase 1: Reward for moving towards red bin
+        red_bin_top_pos = self.red_bin.pose.p.clone()
+        red_bin_top_pos[:, 2] += self.block_half_size[0] + self.radius
+        obj_to_red_dist = torch.linalg.norm(red_bin_top_pos - obj_pos, axis=1)
+        
+        phase_1_mask = info["task_phase"] == 1
+        if phase_1_mask.any():
+            red_placement_reward = 1 - torch.tanh(5.0 * obj_to_red_dist)
+            reward[phase_1_mask & info["is_obj_grasped"]] = (4 + red_placement_reward)[phase_1_mask & info["is_obj_grasped"]]
+            reward[phase_1_mask & info["is_obj_on_red_bin"] & (~info["is_obj_grasped"])] = 13
+        
+        # Phase 2: Reward for moving towards blue bin
+        blue_bin_top_pos = self.blue_bin.pose.p.clone()
+        blue_bin_top_pos[:, 2] += self.block_half_size[0] + self.radius
+        obj_to_blue_dist = torch.linalg.norm(blue_bin_top_pos - obj_pos, axis=1)
+        
+        phase_2_mask = info["task_phase"] == 2
+        if phase_2_mask.any():
+            blue_placement_reward = 1 - torch.tanh(5.0 * obj_to_blue_dist)
+            reward[phase_2_mask & info["is_obj_grasped"]] = (4 + blue_placement_reward)[phase_2_mask & info["is_obj_grasped"]]
+            reward[phase_2_mask & info["is_obj_on_blue_bin"] & (~info["is_obj_grasped"])] = 16
+        
+        # Final success reward
+        reward[info["success"]] = 20
+        
         return reward
 
     def compute_normalized_dense_reward(self, obs: Any, action: Array, info: Dict):
-        # this should be equal to compute_dense_reward / max possible reward
-        max_reward = 13.0
+        max_reward = 20.0
         return self.compute_dense_reward(obs=obs, action=action, info=info) / max_reward
