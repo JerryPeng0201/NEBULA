@@ -1,0 +1,3 @@
+from .pick_cube import SpatialReasoningHardPickCubeEnv
+from .kitchen_assembly import SpatialReasoningHardKitchenAssemblyEnv
+from .build_block import SpatialReasoningHardBuildBlockEnv

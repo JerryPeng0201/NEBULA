@@ -1,0 +1,3 @@
+from .plug_charger import ControlPlugChargerHardEnv
+from .place_sphere import ControlPlaceSphereHardEnv
+from .stack_cube import ControlStackCubeHardEnv

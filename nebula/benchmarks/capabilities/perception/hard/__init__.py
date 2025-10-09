@@ -1,0 +1,3 @@
+from .place_white_peg import PerceptionPlacePegHardEnv
+from .place_red_t import PerceptionPlaceRedTHardEnv
+from .place_right_cubes import PerceptionPlaceRightCubesHardEnv

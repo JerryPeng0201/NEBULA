@@ -1,0 +1,3 @@
+from .stack_cube import ControlStackCubeEasyEnv
+from .place_sphere import ControlPlaceSphereEasyEnv
+from .push_cube import ControlPushCubeEasyEnv

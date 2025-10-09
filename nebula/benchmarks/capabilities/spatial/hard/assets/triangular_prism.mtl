@@ -1,0 +1,6 @@
+newmtl blue_material
+Ka 0.0 0.0 1.0
+Kd 0.0 0.0 1.0
+Ks 0.5 0.5 0.5
+Ns 100.0
+d 1.0

@@ -1,0 +1,502 @@
+"""
+Code for a minimal environment/task with just a robot being loaded. We recommend copying this template and modifying as you need.
+
+At a high-level, ManiSkill tasks can minimally be defined by how the environment resets, what agents/objects are
+loaded, goal parameterization, and success conditions
+
+Environment reset is comprised of running two functions, `self._reconfigure` and `self.initialize_episode`, which is auto
+run by ManiSkill. As a user, you can override a number of functions that affect reconfiguration and episode initialization.
+
+Reconfiguration will reset the entire environment scene and allow you to load/swap assets and agents.
+
+Episode initialization will reset the positions of all objects (called actors), articulations, and agents,
+in addition to initializing any task relevant data like a goal
+
+See comments for how to make your own environment and what each required function should do
+"""
+
+from typing import Any, Dict, Union
+
+import numpy as np
+import sapien
+import torch
+import torch.random
+from transforms3d.euler import euler2quat
+
+from nebula.core.embodiment.robots import Fetch, Panda
+from nebula.core.simulation.engine import BaseEnv
+from nebula.core.sensors.camera import CameraConfig
+from nebula.utils import common, sapien_utils
+from nebula.utils.building import actors
+from nebula.utils.registration import register_env
+from nebula.utils.scene_builder.table import TableSceneBuilder
+from nebula.utils.structs import Pose
+from nebula.utils.structs.types import Array, GPUMemoryConfig, SimConfig
+
+
+@register_env("Robust-PushCube-Easy", max_episode_steps=50)
+class RobustPushCubeEasyEnv(BaseEnv):
+    """
+    **Task Description:**
+    A simple task where the objective is to push and move a cube to a goal region in front of it + distribution objs.
+
+    **Randomizations:**
+    - the cube's xy position is randomized on top of a table in the region [0.1, 0.1] x [-0.1, -0.1]. It is placed flat on the table
+    - the target goal region is marked by a red/white circular target. The position of the target is fixed to be the cube xy position + [0.1 + goal_radius, 0]
+
+    **Success Conditions:**
+    - the cube's xy position is within goal_radius (default 0.1) of the target's xy position by euclidean distance and the cube is still on the table.
+    """
+
+    _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/PushCube-v1_rt.mp4"
+
+    SUPPORTED_ROBOTS = ["panda", "fetch"]
+
+    # Specify some supported robot types
+    agent: Union[Panda, Fetch]
+
+    # set some commonly used values
+    goal_radius = 0.1
+    cube_half_size = 0.02
+
+    def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, **kwargs):
+        # specifying robot_uids="panda" as the default means gym.make("PushCube-v1") will default to using the panda arm.
+        self.robot_init_qpos_noise = robot_init_qpos_noise
+        super().__init__(*args, robot_uids=robot_uids, **kwargs)
+
+    # Specify default simulation/gpu memory configurations to override any default values
+    @property
+    def _default_sim_config(self):
+        return SimConfig(
+            gpu_memory_config=GPUMemoryConfig(
+                found_lost_pairs_capacity=2**25, max_rigid_patch_count=2**18
+            )
+        )
+    
+    def _reconfigure(self, options: dict):
+        """Override reconfigure to ensure complete cleanup of distractor objects"""
+        # Clean up any existing distractor objects before reconfiguring
+        if hasattr(self, 'distractor_objs'):
+            for obj in self.distractor_objs:
+                if obj is not None:
+                    try:
+                        # Force remove from scene
+                        if obj in self.scene.actors:
+                            self.scene.remove_actor(obj)
+                    except:
+                        pass
+            self.distractor_objs = []
+        
+        # Call parent reconfigure
+        super()._reconfigure(options)
+
+    @property
+    def _default_sensor_configs(self):
+        # Base camera configuration
+        base_pose = sapien_utils.look_at(eye=[0.3, 0, 0.2], target=[-0.1, 0, 0])
+        base_camera = CameraConfig(
+            "base_camera",
+            pose=base_pose,
+            width=512,
+            height=512,
+            fov=np.pi / 2,
+            near=0.01,
+            far=100,
+        )
+        
+        # Hand camera configuration
+        hand_camera = CameraConfig(
+            uid="hand_camera",
+            pose=sapien.Pose(p=[0, 0, -0.05], q=[0, 0.7071, 0, 0.7071]),
+            width=512,
+            height=512,
+            fov=np.pi / 2,
+            near=0.01,
+            far=100,
+            mount=self.agent.robot.links_map["panda_hand_tcp"],
+        )
+
+        # Back right camera
+        back_right_pose = sapien_utils.look_at(eye=[-0.3, -0.3, 0.3], target=[0, 0, 0.1])
+        back_right_camera = CameraConfig(
+            uid="back_right_camera",
+            pose=back_right_pose,
+            width=512,
+            height=512,
+            fov=np.pi / 3,
+            near=0.01,
+            far=2.0,
+        )
+
+        # Back left camera
+        back_left_pose = sapien_utils.look_at(eye=[-0.3, 0.3, 0.3], target=[0, 0, 0.1])
+        back_left_camera = CameraConfig(
+            uid="back_left_camera",
+            pose=back_left_pose,
+            width=512,
+            height=512,
+            fov=np.pi / 3,
+            near=0.01,
+            far=2.0,
+        )
+
+        # Front right camera
+        front_right_pose = sapien_utils.look_at(eye=[0.5, -0.5, 0.3], target=[0, 0, 0.1])
+        front_right_camera = CameraConfig(
+            uid="front_right_camera",
+            pose=front_right_pose,
+            width=512,
+            height=512,
+            fov=np.pi / 3,
+            near=0.01,
+            far=2.0,
+        )
+
+        # Front left camera
+        front_left_pose = sapien_utils.look_at(eye=[0.5, 0.5, 0.3], target=[0, 0, 0.1])
+        front_left_camera = CameraConfig(
+            uid="front_left_camera",
+            pose=front_left_pose,
+            width=512,
+            height=512,
+            fov=np.pi / 3,
+            near=0.01,
+            far=2.0,
+        )
+        
+        return [base_camera, hand_camera, back_right_camera, back_left_camera, front_right_camera, front_left_camera]
+
+    @property
+    def _default_human_render_camera_configs(self):
+        # registers a more high-definition (512x512) camera used just for rendering when render_mode="rgb_array" or calling env.render_rgb_array()
+        pose = sapien_utils.look_at([0.6, 0.7, 0.6], [0.0, 0.0, 0.35])
+        return CameraConfig(
+            "render_camera", pose=pose, width=512, height=512, fov=1, near=0.01, far=100
+        )
+    
+    def _add_ycb_distractor_to_pushcube(self, env_idx: torch.Tensor):
+        """
+        Add 1-2 YCB distractor objects to the PushCube environment
+        
+        Args:
+            env_idx: Environment indices to initialize
+        """
+        import random
+        import os
+        from nebula import ASSET_DIR
+        from nebula.utils import assets, download_asset
+        from nebula.utils.building import actors
+        from nebula.utils.structs.pose import Pose
+        
+        # Clean up previous distractor objects if they exist
+        if hasattr(self, 'distractor_objs'):
+            for obj in self.distractor_objs:
+                if obj is not None:
+                    try:
+                        self.scene.remove_actor(obj)
+                    except:
+                        pass
+            self.distractor_objs = []
+        else:
+            self.distractor_objs = []
+        
+        # Ensure YCB assets are available
+        if not os.path.exists(ASSET_DIR / "assets/mani_skill2_ycb"):
+            download_asset.download(assets.DATA_SOURCES["ycb"])
+        
+        # Select YCB objects as distractors
+        ycb_distractors = [
+            "002_master_chef_can",
+            "003_cracker_box",
+            "004_sugar_box",
+            "005_tomato_soup_can",
+            "006_mustard_bottle",
+            "007_tuna_fish_can",
+            "008_pudding_box",
+            "009_gelatin_box",
+            "010_potted_meat_can",
+            "021_bleach_cleanser",
+            "024_bowl",
+            "025_mug",
+            "035_power_drill",
+            "036_wood_block",
+            "037_scissors",
+            "040_large_marker",
+            "051_large_clamp",
+            "052_extra_large_clamp",
+            "061_foam_brick",
+        ]
+        
+        num_distractors = random.randint(1, 2)
+        selected_distractors = random.sample(ycb_distractors, num_distractors)
+        
+        with torch.device(self.device):
+            b = len(env_idx)
+            
+            # Get current positions of cube and goal
+            cube_pos = self.obj.pose.p[0] if self.obj.pose.p.dim() > 1 else self.obj.pose.p
+            goal_pos = self.goal_region.pose.p[0] if self.goal_region.pose.p.dim() > 1 else self.goal_region.pose.p
+            
+            # Define candidate positions
+            candidate_positions = [
+                [-0.25, 0.25],   # Top-left corner
+                [-0.25, -0.25],  # Bottom-left corner
+                [0.25, 0.25],    # Top-right corner
+                [0.25, -0.25],   # Bottom-right corner
+                [0.0, 0.3],      # Top edge center
+                [0.0, -0.3],     # Bottom edge center
+                [-0.3, 0.0],     # Left edge center
+                [0.3, 0.0],      # Right edge center
+                [-0.2, 0.2],     # Additional positions
+                [0.2, -0.2],
+            ]
+            
+            # Filter safe positions based on distance to cube and goal
+            min_safe_distance = 0.15  # Minimum distance from cube and goal
+            safe_positions = []
+            
+            for pos in candidate_positions:
+                pos_tensor = torch.tensor(pos, device=self.device)
+                
+                # Check distance to cube
+                cube_dist = torch.linalg.norm(pos_tensor - cube_pos[:2])
+                # Check distance to goal
+                goal_dist = torch.linalg.norm(pos_tensor - goal_pos[:2])
+                
+                # Ensure minimum distance from both cube and goal
+                if cube_dist > min_safe_distance and goal_dist > min_safe_distance:
+                    safe_positions.append(pos)
+            
+            # If not enough safe positions, use fallback positions farther away
+            if len(safe_positions) < num_distractors:
+                fallback_positions = [
+                    [-0.35, 0.0],
+                    [0.35, 0.0],
+                    [0.0, -0.35],
+                    [0.0, 0.35],
+                ]
+                for pos in fallback_positions:
+                    if pos not in safe_positions:
+                        pos_tensor = torch.tensor(pos, device=self.device)
+                        cube_dist = torch.linalg.norm(pos_tensor - cube_pos[:2])
+                        goal_dist = torch.linalg.norm(pos_tensor - goal_pos[:2])
+                        if cube_dist > min_safe_distance and goal_dist > min_safe_distance:
+                            safe_positions.append(pos)
+            
+            # Shuffle safe positions
+            random.shuffle(safe_positions)
+            
+            # Place each distractor
+            for i, selected_distractor in enumerate(selected_distractors):
+                if i >= len(safe_positions):
+                    print(f"Warning: Not enough safe positions for all distractors")
+                    break
+                    
+                # Create YCB object
+                builder = actors.get_actor_builder(self.scene, id=f"ycb:{selected_distractor}")
+                
+                # Generate unique name
+                episode_id = random.randint(10000, 99999)
+                unique_name = f"distractor_{selected_distractor}_{episode_id}"
+                
+                # Set initial position in the air
+                builder.initial_pose = sapien.Pose(p=[0, 0, 1.0])
+                distractor_obj = builder.build(name=unique_name)
+                
+                # Set physical properties
+                if distractor_obj.has_collision_shapes:
+                    for shape in distractor_obj._bodies[0].get_collision_shapes():
+                        material = shape.get_physical_material()
+                        material.static_friction = 0.8
+                        material.dynamic_friction = 0.7
+                        material.restitution = 0.1
+                
+                # Use validated safe position
+                selected_position = safe_positions[i]
+                
+                # Set distractor object position
+                distractor_xyz = torch.zeros((b, 3))
+                distractor_xyz[..., 0] = selected_position[0]
+                distractor_xyz[..., 1] = selected_position[1]
+                distractor_xyz[..., 2] = self.cube_half_size + 0.05
+                
+                # Random rotation
+                random_angle = random.uniform(0, 2 * np.pi)
+                quat = torch.zeros((b, 4))
+                quat[..., 2] = np.sin(random_angle / 2)
+                quat[..., 3] = np.cos(random_angle / 2)
+                
+                # Set pose and velocities
+                distractor_obj.set_pose(Pose.create_from_pq(p=distractor_xyz, q=quat))
+                distractor_obj.set_linear_velocity(torch.zeros((b, 3)))
+                distractor_obj.set_angular_velocity(torch.zeros((b, 3)))
+                
+                # Add to list
+                self.distractor_objs.append(distractor_obj)
+        
+        return self.distractor_objs
+
+    def _load_agent(self, options: dict):
+        # set a reasonable initial pose for the agent that doesn't intersect other objects
+        super()._load_agent(options, sapien.Pose(p=[-0.615, 0, 0]))
+
+    def _load_scene(self, options: dict):
+        # we use a prebuilt scene builder class that automatically loads in a floor and table.
+        self.table_scene = TableSceneBuilder(
+            env=self, robot_init_qpos_noise=self.robot_init_qpos_noise
+        )
+        self.table_scene.build()
+
+        # we then add the cube that we want to push and give it a color and size using a convenience build_cube function
+        # we specify the body_type to be "dynamic" as it should be able to move when touched by other objects / the robot
+        # finally we specify an initial pose for the cube so that it doesn't collide with other objects initially
+        self.obj = actors.build_cube(
+            self.scene,
+            half_size=self.cube_half_size,
+            color=np.array([12, 42, 160, 255]) / 255,
+            name="cube",
+            body_type="dynamic",
+            initial_pose=sapien.Pose(p=[0, 0, self.cube_half_size]),
+        )
+
+        # we also add in red/white target to visualize where we want the cube to be pushed to
+        # we specify add_collisions=False as we only use this as a visual for videos and do not want it to affect the actual physics
+        # we finally specify the body_type to be "kinematic" so that the object stays in place
+        self.goal_region = actors.build_red_white_target(
+            self.scene,
+            radius=self.goal_radius,
+            thickness=1e-5,
+            name="goal_region",
+            add_collision=False,
+            body_type="kinematic",
+            initial_pose=sapien.Pose(p=[0, 0, 1e-3]),
+        )
+
+        # optionally you can automatically hide some Actors from view by appending to the self._hidden_objects list. When visual observations
+        # are generated or env.render_sensors() is called or env.render() is called with render_mode="sensors", the actor will not show up.
+        # This is useful if you intend to add some visual goal sites as e.g. done in PickCube that aren't actually part of the task
+        # and are there just for generating evaluation videos.
+        # self._hidden_objects.append(self.goal_region)
+
+    def _initialize_episode(self, env_idx: torch.Tensor, options: dict):
+        # use the torch.device context manager to automatically create tensors on CPU or CUDA depending on self.device, the device the environment runs on
+        with torch.device(self.device):
+            # the initialization functions where you as a user place all the objects and initialize their properties
+            # are designed to support partial resets, where you generate initial state for a subset of the environments.
+            # this is done by using the env_idx variable, which also tells you the batch size
+            b = len(env_idx)
+            # when using scene builders, you must always call .initialize on them so they can set the correct poses of objects in the prebuilt scene
+            # note that the table scene is built such that z=0 is the surface of the table.
+            self.table_scene.initialize(env_idx)
+
+            # here we write some randomization code that randomizes the x, y position of the cube we are pushing in the range [-0.1, -0.1] to [0.1, 0.1]
+            xyz = torch.zeros((b, 3))
+            xyz[..., 0] = 0.0  # fixed x position at center
+            xyz[..., 1] = 0.0  # fixed y position at center
+            xyz[..., 2] = self.cube_half_size
+            q = [1, 0, 0, 0]
+            # we can then create a pose object using Pose.create_from_pq to then set the cube pose with. Note that even though our quaternion
+            # is not batched, Pose.create_from_pq will automatically batch p or q accordingly
+            # furthermore, notice how here we do not even use env_idx as a variable to say set the pose for objects in desired
+            # environments. This is because internally any calls to set data on the GPU buffer (e.g. set_pose, set_linear_velocity etc.)
+            # automatically are masked so that you can only set data on objects in environments that are meant to be initialized
+            obj_pose = Pose.create_from_pq(p=xyz, q=q)
+            self.obj.set_pose(obj_pose)
+
+            # here we set the location of that red/white target (the goal region). In particular here, we set the position to be in front of the cube
+            # and we further rotate 90 degrees on the y-axis to make the target object face up
+            target_region_xyz = xyz + torch.tensor([0.1 + self.goal_radius, 0, 0])
+            # set a little bit above 0 so the target is sitting on the table
+            target_region_xyz[..., 2] = 1e-3
+            self.goal_region.set_pose(
+                Pose.create_from_pq(
+                    p=target_region_xyz,
+                    q=euler2quat(0, np.pi / 2, 0),
+                )
+            )
+
+            if hasattr(self, 'distractor_objs') and self.distractor_objs:
+                for obj in self.distractor_objs:
+                    try:
+                        self.scene.remove_actor(obj)
+                    except:
+                        pass
+                self.distractor_objs = []
+            
+            # Also clean any orphaned distractors by name
+            actors_to_remove = []
+            for actor in self.scene.actors:
+                if hasattr(actor, 'name') and actor.name.startswith("distractor_"):
+                    actors_to_remove.append(actor)
+
+            self._add_ycb_distractor_to_pushcube(env_idx)
+
+    def evaluate(self):
+        # success is achieved when the cube's xy position on the table is within the
+        # goal region's area (a circle centered at the goal region's xy position) and
+        # the cube is still on the surface
+        is_obj_placed = (
+            torch.linalg.norm(
+                self.obj.pose.p[..., :2] - self.goal_region.pose.p[..., :2], axis=1
+            )
+            < self.goal_radius
+        ) & (self.obj.pose.p[..., 2] < self.cube_half_size + 5e-3)
+
+        return {
+            "success": is_obj_placed,
+        }
+
+    def _get_obs_extra(self, info: Dict):
+        # some useful observation info for solving the task includes the pose of the tcp (tool center point) which is the point between the
+        # grippers of the robot
+        obs = dict(
+            tcp_pose=self.agent.tcp.pose.raw_pose,
+        )
+        if self.obs_mode_struct.use_state:
+            # if the observation mode requests to use state, we provide ground truth information about where the cube is.
+            # for visual observation modes one should rely on the sensed visual data to determine where the cube is
+            obs.update(
+                goal_pos=self.goal_region.pose.p,
+                obj_pose=self.obj.pose.raw_pose,
+            )
+        return obs
+
+    def compute_dense_reward(self, obs: Any, action: Array, info: Dict):
+        # We also create a pose marking where the robot should push the cube from that is easiest (pushing from behind the cube)
+        tcp_push_pose = Pose.create_from_pq(
+            p=self.obj.pose.p
+            + torch.tensor([-self.cube_half_size - 0.005, 0, 0], device=self.device)
+        )
+        tcp_to_push_pose = tcp_push_pose.p - self.agent.tcp.pose.p
+        tcp_to_push_pose_dist = torch.linalg.norm(tcp_to_push_pose, axis=1)
+        reaching_reward = 1 - torch.tanh(5 * tcp_to_push_pose_dist)
+        reward = reaching_reward
+
+        # compute a placement reward to encourage robot to move the cube to the center of the goal region
+        # we further multiply the place_reward by a mask reached so we only add the place reward if the robot has reached the desired push pose
+        # This reward design helps train RL agents faster by staging the reward out.
+        reached = tcp_to_push_pose_dist < 0.01
+        obj_to_goal_dist = torch.linalg.norm(
+            self.obj.pose.p[..., :2] - self.goal_region.pose.p[..., :2], axis=1
+        )
+        place_reward = 1 - torch.tanh(5 * obj_to_goal_dist)
+        reward += place_reward * reached
+        
+        # Compute a z reward to encourage the robot to keep the cube on the table
+        desired_obj_z = self.cube_half_size
+        current_obj_z = self.obj.pose.p[..., 2]
+        z_deviation = torch.abs(current_obj_z - desired_obj_z)
+        z_reward = 1 - torch.tanh(5 * z_deviation)
+        # We multiply the z reward by the place_reward and reached mask so that 
+        #   we only add the z reward if the robot has reached the desired push pose
+        #   and the z reward becomes more important as the robot gets closer to the goal.
+        reward += place_reward * z_reward * reached
+
+        # assign rewards to parallel environments that achieved success to the maximum of 3.
+        reward[info["success"]] = 4
+        return reward
+
+    def compute_normalized_dense_reward(self, obs: Any, action: Array, info: Dict):
+        # this should be equal to compute_dense_reward / max possible reward
+        max_reward = 4.0
+        return self.compute_dense_reward(obs=obs, action=action, info=info) / max_reward

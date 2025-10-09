@@ -1,0 +1,3 @@
+from .stack_cube import ControlStackCubeMediumEnv
+from .peg_insertion_side import ControlPegInsertionSideMediumEnv
+from .place_sphere import ControlPlaceSphereMediumEnv

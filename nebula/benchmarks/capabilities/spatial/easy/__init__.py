@@ -1,0 +1,3 @@
+from .pick_cube import SpatialReasoningEasyPickCubeEnv
+from .move_cube import SpatialReasoningEasyMoveCubeEnv
+from .place_between import SpatialReasoningEasyPlaceBetweenEnv

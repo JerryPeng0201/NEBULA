@@ -1,0 +1,3 @@
+from .assembling_kits import RobustHardAssemblingKitsEnv
+from .kitchen_assembly import RobustHardKitchenAssemblyEnv
+from .lift_peg_upright import RobustHardLiftPegUprightEnv

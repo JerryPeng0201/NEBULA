@@ -1,0 +1,3 @@
+from .press_switch import PressLightSwitchEnv
+from .pick_cube_color import ColorSwitchPickCubeEnv
+from .pick_cube_shape import ShapeSwitchPickCubeEnv
