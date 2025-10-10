@@ -4,6 +4,14 @@ The Control capability family evaluates an agent’s ability to perform precise 
 
 Unlike Perception or Language tasks that rely heavily on understanding, Control tasks emphasize execution fidelity, action precision, and response consistency.
 
+## Difficulty Level
+
+| **Difficulty** | **Action Length**      | **Precision Requirement**                                 | **Example Task**                      |
+|----------------|------------------------|------------------------------------------------------------|----------------------------------------|
+| Easy           | 1–2 sequential actions | No fine precision required                                   | Pick and Place                         |
+| Medium         | 3–4 sequential actions | Coarse precision (*e.g.,* insert magnet into a large socket) | Insert magnet into oversized hole      |
+| Hard           | 5+ sequential actions  | Fine precision (*e.g.,* peg-in-hole alignment)               | Plug connector into electrical socket  |
+
 ## Task Preview
 
 We will put a figure at here
