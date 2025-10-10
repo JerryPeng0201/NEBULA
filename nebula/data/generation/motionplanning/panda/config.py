@@ -14,5 +14,7 @@ SOLUTIONS_CONFIG = {
    "Control-PlaceSphere-Medium": ControlPlaceSphereMediumSolution,
    "Control-StackCube-Medium": ControlStackCubeMediumSolution,
    "Control-PlaceSphere-Hard": ControlPlaceSphereHardSolution,
+   "Control-PlugCharger-Hard": ControlPlugChargerHardSolution,
+   "Control-StackCube-Hard": ControlStackCubeHardSolution,
 }
 

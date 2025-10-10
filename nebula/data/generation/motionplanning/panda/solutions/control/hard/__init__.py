@@ -1,2 +1,3 @@
 from .place_sphere import ControlPlaceSphereHardSolution
-
+from .plug_charger import ControlPlugChargerHardSolution
+from .stack_cube import ControlStackCubeHardSolution
