@@ -1,0 +1,3 @@
+from .pick_biggersphere import PerceptionPickBiggerSphereEasySolution
+from .place_redsphere import PerceptionPickRedSphereEasySolution
+from .pick_sphere import PerceptionPickSphereEasySolution

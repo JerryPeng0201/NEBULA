@@ -20,48 +20,35 @@ from nebula.utils.structs import Pose
 from nebula.utils.structs.types import Array, GPUMemoryConfig, SimConfig
 
 
-@register_env("Perception-PlaceRedT-Medium", max_episode_steps=50)
-class PerceptionPlaceRedTMediumEnv(BaseEnv):
+@register_env("Perception-PickRedT-Medium", max_episode_steps=50)
+class PerceptionPickRedTMediumEnv(BaseEnv):
     """
     **Task Description:**
-    Place any object (blue sphere, green cube, or small red T-shape) into the shallow bin.
+    Grasp the red T-shape among three objects of different shapes (blue sphere, green cube, and red T-shape).
+    This is a perception task that tests the robot's ability to identify and grasp the 
+    correct object based on its unique T-shape.
 
     **Randomizations:**
-    - The position of the bin and the objects are randomized: The bin is initialized in [0, 0.1] x [-0.1, 0.1],
-    and the objects are initialized at fixed positions in [-0.1, -0.05] x [-0.1, 0.1]
+    - The objects are placed at fixed positions: blue sphere at y=-0.06, green cube at y=0.0, 
+    and red T-shape at y=0.06, all at x=-0.08.
 
     **Success Conditions:**
-    - Any object is placed on the top of the bin. The robot remains static and the gripper is not closed at the end state.
+    - The red T-shape is grasped by the robot. No placement is required for perception tasks.
     """
 
-    _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/PlaceSphere-v1_rt.mp4"
     SUPPORTED_ROBOTS = ["panda", "fetch"]
 
     # Specify some supported robot types
     agent: Union[Panda, Fetch]
 
     # set common size for all objects
-    object_size = 0.02  # radius for sphere, half_size for cube, scaled size for T
+    object_size = 0.02  # radius for sphere, half_size for cube
     
-    # T-shape properties
+    # T-shape properties (bigger T)
     T_mass = 0.1
     T_dynamic_friction = 0.3
     T_static_friction = 0.3
     TARGET_RED = np.array([194, 19, 22, 255]) / 255
-    
-    # bin dimensions
-    inner_side_half_len = 0.03  # adjusted for smaller objects
-    short_side_half_size = 0.0025
-    block_half_size = [
-        short_side_half_size,
-        2 * short_side_half_size + inner_side_half_len,
-        2 * short_side_half_size + inner_side_half_len,
-    ]
-    edge_block_half_size = [
-        short_side_half_size,
-        2 * short_side_half_size + inner_side_half_len,
-        2 * short_side_half_size,
-    ]
 
     def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, **kwargs):
         self.robot_init_qpos_noise = robot_init_qpos_noise
@@ -158,51 +145,13 @@ class PerceptionPlaceRedTMediumEnv(BaseEnv):
             "render_camera", pose=pose, width=512, height=512, fov=1, near=0.01, far=100
         )
 
-    def _build_bin(self):
-        builder = self.scene.create_actor_builder()
-
-        # init the locations of the basic blocks
-        dx = self.block_half_size[1] - self.block_half_size[0]
-        dy = self.block_half_size[1] - self.block_half_size[0]
-        dz = self.edge_block_half_size[2] + self.block_half_size[0]
-
-        # build the bin bottom and edge blocks
-        poses = [
-            sapien.Pose([0, 0, 0]),
-            sapien.Pose([-dx, 0, dz]),
-            sapien.Pose([dx, 0, dz]),
-            sapien.Pose([0, -dy, dz]),
-            sapien.Pose([0, dy, dz]),
-        ]
-        half_sizes = [
-            [self.block_half_size[1], self.block_half_size[2], self.block_half_size[0]],
-            self.edge_block_half_size,
-            self.edge_block_half_size,
-            [
-                self.edge_block_half_size[1],
-                self.edge_block_half_size[0],
-                self.edge_block_half_size[2],
-            ],
-            [
-                self.edge_block_half_size[1],
-                self.edge_block_half_size[0],
-                self.edge_block_half_size[2],
-            ],
-        ]
-        for pose, half_size in zip(poses, half_sizes):
-            builder.add_box_collision(pose, half_size)
-            builder.add_box_visual(pose, half_size)
-
-        # build the kinematic bin
-        return builder.build_kinematic(name="bin")
-
     def create_small_tee(self, name="small_tee", target=False, base_color=None):
-        """Returns smaller 3D CAD of create_tee - scaled down to match sphere/cube size"""
+        """Returns bigger 3D CAD of create_tee - scaled up for better grasping"""
         if base_color is None:
             base_color = self.TARGET_RED
         
-        # scaled down dimensions (about 1/3 of original size)
-        scale_factor = 0.35
+        # scaled dimensions (bigger T for perception task)
+        scale_factor = 0.6
         box1_half_w = (0.2 / 2) * scale_factor  # 0.035
         box1_half_h = (0.05 / 2) * scale_factor  # 0.00875
         half_thickness = (0.04 / 2) * scale_factor if not target else 1e-4  # 0.007
@@ -273,7 +222,7 @@ class PerceptionPlaceRedTMediumEnv(BaseEnv):
             color=np.array([12, 42, 160, 255]) / 255,  # blue
             name="blue_sphere",
             body_type="dynamic",
-            initial_pose=Pose.create_from_pq(p=[0, 0, self.object_size], q=[1, 0, 0, 0])
+            initial_pose=Pose.create_from_pq(p=[-0.08, -0.06, self.object_size], q=[1, 0, 0, 0])
         )
         
         # load the green cube
@@ -283,13 +232,11 @@ class PerceptionPlaceRedTMediumEnv(BaseEnv):
             color=np.array([0, 180, 0, 255]) / 255,  # green
             name="green_cube",
             body_type="dynamic",
+            initial_pose=Pose.create_from_pq(p=[-0.08, 0.0, self.object_size], q=[1, 0, 0, 0])
         )
 
-        # load the small red T-shape
+        # load the red T-shape (bigger now)
         self.red_tee = self.create_small_tee(name="red_tee", target=False)
-
-        # load the bin
-        self.bin = self._build_bin()
 
     def _initialize_episode(self, env_idx: torch.Tensor, options: dict):
         with torch.device(self.device):
@@ -314,79 +261,28 @@ class PerceptionPlaceRedTMediumEnv(BaseEnv):
             green_cube_pose = Pose.create_from_pq(p=xyz.clone(), q=q)
             self.green_cube.set_pose(green_cube_pose)
 
-            # Small red T-shape position (fixed)
+            # Red T-shape position (fixed) - bigger T now (scale_factor 0.6)
             xyz[..., 0] = -0.08  # same x as other objects
             xyz[..., 1] = 0.06   # fixed y position, spaced from others
-            xyz[..., 2] = 0.007  # T thickness/2 (scaled up)
+            xyz[..., 2] = 0.012  # T thickness/2 (0.04/2 * 0.6 = 0.012)
             red_tee_pose = Pose.create_from_pq(p=xyz, q=q)
             self.red_tee.set_pose(red_tee_pose)
 
-            # init the bin in the last 1/2 zone along the x-axis (so that it doesn't collide the objects)
-            pos = torch.zeros((b, 3))
-            pos[:, 0] = (
-                torch.rand((b, 1))[..., 0] * 0.1
-            )  # the last 1/2 zone of x ([0, 0.1])
-            pos[:, 1] = (
-                torch.rand((b, 1))[..., 0] * 0.2 - 0.1
-            )  # spanning all possible ys
-            pos[:, 2] = self.block_half_size[0]  # on the table
-            q = [1, 0, 0, 0]
-            bin_pose = Pose.create_from_pq(p=pos, q=q)
-            self.bin.set_pose(bin_pose)
-
     def evaluate(self):
-        pos_blue_sphere = self.blue_sphere.pose.p
-        pos_green_cube = self.green_cube.pose.p
-        pos_red_tee = self.red_tee.pose.p
-        pos_bin = self.bin.pose.p
-        
-        # Check if any object is on the bin
-        is_blue_sphere_on_bin = self._check_object_on_bin(pos_blue_sphere, pos_bin, self.object_size)
-        is_green_cube_on_bin = self._check_object_on_bin(pos_green_cube, pos_bin, self.object_size)
-        is_red_tee_on_bin = self._check_object_on_bin(pos_red_tee, pos_bin, 0.007)  # T thickness/2
-        is_any_object_on_bin = torch.logical_or(
-            torch.logical_or(is_blue_sphere_on_bin, is_green_cube_on_bin),
-            is_red_tee_on_bin
-        )
-        
-        # Check if objects are static
-        is_blue_sphere_static = self.blue_sphere.is_static(lin_thresh=1e-2, ang_thresh=0.5)
-        is_green_cube_static = self.green_cube.is_static(lin_thresh=1e-2, ang_thresh=0.5)
-        is_red_tee_static = self.red_tee.is_static(lin_thresh=1e-2, ang_thresh=0.5)
-        
         # Check if objects are grasped
         is_blue_sphere_grasped = self.agent.is_grasping(self.blue_sphere)
         is_green_cube_grasped = self.agent.is_grasping(self.green_cube)
         is_red_tee_grasped = self.agent.is_grasping(self.red_tee)
         
-        # Success: any object on bin, that object is static, and that object is not grasped
-        blue_sphere_success = is_blue_sphere_on_bin & (~is_blue_sphere_grasped)
-        green_cube_success = is_green_cube_on_bin & (~is_green_cube_grasped)
-        red_tee_success = is_red_tee_on_bin & (~is_red_tee_grasped)
-        success = torch.logical_or(
-            torch.logical_or(blue_sphere_success, green_cube_success),
-            red_tee_success
-        )
+        # Success: grasp the red T-shape - perception task only requires grasping the correct object
+        success = is_red_tee_grasped
         
         return {
             "is_blue_sphere_grasped": is_blue_sphere_grasped,
             "is_green_cube_grasped": is_green_cube_grasped,
             "is_red_tee_grasped": is_red_tee_grasped,
-            "is_blue_sphere_on_bin": is_blue_sphere_on_bin,
-            "is_green_cube_on_bin": is_green_cube_on_bin,
-            "is_red_tee_on_bin": is_red_tee_on_bin,
             "success": success,
         }
-
-    def _check_object_on_bin(self, pos_object, pos_bin, object_height):
-        """Check if object is on top of the bin"""
-        offset = pos_object - pos_bin
-        # Lenient xy check for object placement
-        xy_flag = torch.linalg.norm(offset[..., :2], axis=1) <= 0.03
-        z_flag = (
-            torch.abs(offset[..., 2] - object_height - self.block_half_size[0]) <= 0.02
-        )
-        return torch.logical_and(xy_flag, z_flag)
 
     def _get_obs_extra(self, info: Dict):
         obs = dict(
@@ -394,7 +290,6 @@ class PerceptionPlaceRedTMediumEnv(BaseEnv):
             is_green_cube_grasped=info["is_green_cube_grasped"],
             is_red_tee_grasped=info["is_red_tee_grasped"],
             tcp_pose=self.agent.tcp.pose.raw_pose,
-            bin_pos=self.bin.pose.p,
         )
         if "state" in self.obs_mode:
             obs.update(
@@ -408,99 +303,22 @@ class PerceptionPlaceRedTMediumEnv(BaseEnv):
         return obs
 
     def compute_dense_reward(self, obs: Any, action: torch.Tensor, info: Dict):
-        # reaching reward - reward for getting close to any object
+        # reaching reward - reward for getting close to the RED T-SHAPE (the target)
         tcp_pose = self.agent.tcp.pose.p
-        blue_sphere_pos = self.blue_sphere.pose.p
-        green_cube_pos = self.green_cube.pose.p
         red_tee_pos = self.red_tee.pose.p
         
-        obj_to_tcp_dist_blue_sphere = torch.linalg.norm(tcp_pose - blue_sphere_pos, axis=1)
-        obj_to_tcp_dist_green_cube = torch.linalg.norm(tcp_pose - green_cube_pos, axis=1)
         obj_to_tcp_dist_red_tee = torch.linalg.norm(tcp_pose - red_tee_pos, axis=1)
-        obj_to_tcp_dist = torch.minimum(
-            torch.minimum(obj_to_tcp_dist_blue_sphere, obj_to_tcp_dist_green_cube),
-            obj_to_tcp_dist_red_tee
-        )
-        reward = 2 * (1 - torch.tanh(5 * obj_to_tcp_dist))
+        reward = 2 * (1 - torch.tanh(5 * obj_to_tcp_dist_red_tee))
 
-        # grasp and place reward
-        bin_top_pos_sphere = self.bin.pose.p.clone()
-        bin_top_pos_sphere[:, 2] = bin_top_pos_sphere[:, 2] + self.block_half_size[0] + self.object_size
-        
-        bin_top_pos_cube = self.bin.pose.p.clone()
-        bin_top_pos_cube[:, 2] = bin_top_pos_cube[:, 2] + self.block_half_size[0] + self.object_size
-        
-        bin_top_pos_tee = self.bin.pose.p.clone()
-        bin_top_pos_tee[:, 2] = bin_top_pos_tee[:, 2] + self.block_half_size[0] + 0.007
-        
-        blue_sphere_to_bin_dist = torch.linalg.norm(bin_top_pos_sphere - blue_sphere_pos, axis=1)
-        green_cube_to_bin_dist = torch.linalg.norm(bin_top_pos_cube - green_cube_pos, axis=1)
-        red_tee_to_bin_dist = torch.linalg.norm(bin_top_pos_tee - red_tee_pos, axis=1)
-        
-        # Reward based on whichever object is grasped
-        is_blue_sphere_grasped = info["is_blue_sphere_grasped"]
-        is_green_cube_grasped = info["is_green_cube_grasped"]
+        # grasp reward - reward for grasping the correct (red T-shape) object
         is_red_tee_grasped = info["is_red_tee_grasped"]
-        
-        blue_sphere_place_reward = 1 - torch.tanh(5.0 * blue_sphere_to_bin_dist)
-        green_cube_place_reward = 1 - torch.tanh(5.0 * green_cube_to_bin_dist)
-        red_tee_place_reward = 1 - torch.tanh(5.0 * red_tee_to_bin_dist)
-        
-        reward[is_blue_sphere_grasped] = (4 + blue_sphere_place_reward)[is_blue_sphere_grasped]
-        reward[is_green_cube_grasped] = (4 + green_cube_place_reward)[is_green_cube_grasped]
-        reward[is_red_tee_grasped] = (4 + red_tee_place_reward)[is_red_tee_grasped]
+        reward[is_red_tee_grasped] = 5.0
 
-        # ungrasp and static reward
-        gripper_width = (self.agent.robot.get_qlimits()[0, -1, 1] * 2).to(self.device)
-        is_any_object_grasped = torch.logical_or(
-            torch.logical_or(is_blue_sphere_grasped, is_green_cube_grasped),
-            is_red_tee_grasped
-        )
-        ungrasp_reward = (
-            torch.sum(self.agent.robot.get_qpos()[:, -2:], axis=1) / gripper_width
-        )
-        ungrasp_reward[
-            ~is_any_object_grasped
-        ] = 16.0  # give ungrasp a bigger reward
-        
-        # Static reward for whichever object is on the bin
-        blue_sphere_v = torch.linalg.norm(self.blue_sphere.linear_velocity, axis=1)
-        blue_sphere_av = torch.linalg.norm(self.blue_sphere.angular_velocity, axis=1)
-        blue_sphere_static_reward = 1 - torch.tanh(blue_sphere_v * 10 + blue_sphere_av)
-        
-        green_cube_v = torch.linalg.norm(self.green_cube.linear_velocity, axis=1)
-        green_cube_av = torch.linalg.norm(self.green_cube.angular_velocity, axis=1)
-        green_cube_static_reward = 1 - torch.tanh(green_cube_v * 10 + green_cube_av)
-        
-        red_tee_v = torch.linalg.norm(self.red_tee.linear_velocity, axis=1)
-        red_tee_av = torch.linalg.norm(self.red_tee.angular_velocity, axis=1)
-        red_tee_static_reward = 1 - torch.tanh(red_tee_v * 10 + red_tee_av)
-        
-        robot_static_reward = self.agent.is_static(0.2)
-        
-        is_blue_sphere_on_bin = info["is_blue_sphere_on_bin"]
-        is_green_cube_on_bin = info["is_green_cube_on_bin"]
-        is_red_tee_on_bin = info["is_red_tee_on_bin"]
-        is_any_on_bin = torch.logical_or(
-            torch.logical_or(is_blue_sphere_on_bin, is_green_cube_on_bin),
-            is_red_tee_on_bin
-        )
-        
-        # Use the static reward for whichever object is on the bin
-        static_reward = torch.where(
-            is_blue_sphere_on_bin, blue_sphere_static_reward,
-            torch.where(is_green_cube_on_bin, green_cube_static_reward, red_tee_static_reward)
-        )
-        
-        reward[is_any_on_bin] = (
-            6 + (ungrasp_reward + static_reward + robot_static_reward) / 3.0
-        )[is_any_on_bin]
-
-        # success reward
-        reward[info["success"]] = 13
+        # success reward - successfully grasped the red T-shape
+        reward[info["success"]] = 10.0
         return reward
 
     def compute_normalized_dense_reward(self, obs: Any, action: Array, info: Dict):
         # this should be equal to compute_dense_reward / max possible reward
-        max_reward = 13.0
+        max_reward = 10.0
         return self.compute_dense_reward(obs=obs, action=action, info=info) / max_reward

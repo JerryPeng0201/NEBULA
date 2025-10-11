@@ -16,5 +16,16 @@ SOLUTIONS_CONFIG = {
    "Control-PlaceSphere-Hard": ControlPlaceSphereHardSolution,
    "Control-PlugCharger-Hard": ControlPlugChargerHardSolution,
    "Control-StackCube-Hard": ControlStackCubeHardSolution,
+
+    # ===== Perception SOLUTIONS =====
+    "Perception-PickBiggerSphere-Easy": PerceptionPickBiggerSphereEasySolution,
+    "Perception-PickRedSphere-Easy": PerceptionPickRedSphereEasySolution,
+    "Perception-PickSphere-Easy": PerceptionPickSphereEasySolution,
+    "Perception-PickDiffCubes-Medium": PerceptionPickDiffCubesMediumSolution,
+    "Perception-PickRedT-Medium": PerceptionPickRedTMediumSolution,
+    "Perception-PickWhitePeg-Medium": PerceptionPickWhitePegMediumSolution,
+    "Perception-PickRedT-Hard": PerceptionPickRedTHardSolution,
+    "Perception-PickRightCubes-Hard": PerceptionPickRightCubesHardSolution,
+    "Perception-PickPeg-Hard": PerceptionPickPegHardSolution,
 }
 

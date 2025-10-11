@@ -1,3 +1,3 @@
-from .place_red_sphere import PerceptionPlaceRedSphereEasyEnv
-from .place_sphere import PerceptionPlaceSphereEasyEnv
-from .place_bigger_sphere import PerceptionPlaceBiggerSphereEasyEnv
+from .pick_biggersphere import PerceptionPickBiggerSphereEasyEnv
+from .pick_redsphere import PerceptionPickRedSphereEasyEnv
+from .pick_sphere import PerceptionPickSphereEasyEnv

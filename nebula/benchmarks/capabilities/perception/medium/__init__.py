@@ -1,3 +1,3 @@
-from .place_white_peg import PerceptionPlaceWhitePegMediumEnv
-from .place_red_t import PerceptionPlaceRedTMediumEnv
-from .place_diff_cubes import PerceptionPlaceDiffCubesMediumEnv
+from .pick_whitePeg import PerceptionPickWhitePegMediumEnv
+from .pick_diffcubes import PerceptionPickDiffCubesMediumEnv
+from .pick_redT import PerceptionPickRedTMediumEnv

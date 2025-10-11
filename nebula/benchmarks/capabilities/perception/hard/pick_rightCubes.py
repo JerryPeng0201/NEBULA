@@ -20,21 +20,23 @@ from nebula.utils.structs import Pose
 from nebula.utils.structs.types import Array, GPUMemoryConfig, SimConfig
 
 
-@register_env("Perception-PlaceRightCubes-Hard", max_episode_steps=50)
-class PerceptionPlaceRightCubesHardEnv(BaseEnv):
+@register_env("Perception-PickRightCubes-Hard", max_episode_steps=50)
+class PerceptionPickRightCubesHardEnv(BaseEnv):
     """
     **Task Description:**
-    Place the small cube into the shallow bin. Only the small cube fits in the bin - the medium and large cubes are too big.
+    Grasp the small cube that fits in the bin. The scene contains three cubes of different sizes 
+    (small, medium, large) and a bin. The robot must identify which cube would fit in the bin and grasp it.
+    This is a perception task that tests size reasoning - only the small cube fits in the bin.
 
     **Randomizations:**
-    - The position of the bin and the cubes are randomized: The bin is initialized in [0, 0.1] x [-0.1, 0.1],
-    and the cubes are initialized at fixed positions in [-0.1, -0.05] x [-0.1, 0.1]
+    - The bin is initialized at randomized positions in [0, 0.1] x [-0.1, 0.1].
+    - The cubes are initialized at fixed positions at x=-0.08 with different y-positions.
 
     **Success Conditions:**
-    - Only the small cube can be successfully placed in the bin. The robot remains static and the gripper is not closed at the end state.
+    - The small cube (the only one that fits in the bin) is grasped by the robot. 
+    No placement is required for perception tasks.
     """
 
-    _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/PlaceSphere-v1_rt.mp4"
     SUPPORTED_ROBOTS = ["panda", "fetch"]
 
     # Specify some supported robot types
@@ -156,6 +158,10 @@ class PerceptionPlaceRightCubesHardEnv(BaseEnv):
 
     def _build_bin(self):
         builder = self.scene.create_actor_builder()
+        
+        # Set initial pose for the bin (will be updated in _initialize_episode)
+        initial_pose = sapien.Pose(p=[0.05, 0, self.block_half_size[0]], q=[1, 0, 0, 0])
+        builder.set_initial_pose(initial_pose)
 
         # init the locations of the basic blocks
         dx = self.block_half_size[1] - self.block_half_size[0]
@@ -209,6 +215,7 @@ class PerceptionPlaceRightCubesHardEnv(BaseEnv):
             color=np.array([0, 255, 0, 255]) / 255,  # green - fits in bin
             name="small_cube",
             body_type="dynamic",
+            initial_pose=Pose.create_from_pq(p=[-0.08, -0.08, self.small_cube_size], q=[1, 0, 0, 0])
         )
         
         self.medium_cube = actors.build_cube(
@@ -217,6 +224,7 @@ class PerceptionPlaceRightCubesHardEnv(BaseEnv):
             color=np.array([255, 255, 0, 255]) / 255,  # yellow - too big for bin
             name="medium_cube",
             body_type="dynamic",
+            initial_pose=Pose.create_from_pq(p=[-0.08, 0.0, self.medium_cube_size], q=[1, 0, 0, 0])
         )
         
         self.large_cube = actors.build_cube(
@@ -225,6 +233,7 @@ class PerceptionPlaceRightCubesHardEnv(BaseEnv):
             color=np.array([255, 0, 0, 255]) / 255,  # red - too big for bin
             name="large_cube",
             body_type="dynamic",
+            initial_pose=Pose.create_from_pq(p=[-0.08, 0.08, self.large_cube_size], q=[1, 0, 0, 0])
         )
 
         # load the bin
@@ -277,61 +286,21 @@ class PerceptionPlaceRightCubesHardEnv(BaseEnv):
             self.bin.set_pose(bin_pose)
 
     def evaluate(self):
-        pos_small_cube = self.small_cube.pose.p
-        pos_medium_cube = self.medium_cube.pose.p
-        pos_large_cube = self.large_cube.pose.p
-        pos_bin = self.bin.pose.p
-        
-        # Check if any cube is on the bin (but only small cube should fit)
-        is_small_cube_on_bin = self._check_cube_on_bin(pos_small_cube, pos_bin, self.small_cube_size)
-        is_medium_cube_on_bin = self._check_cube_on_bin(pos_medium_cube, pos_bin, self.medium_cube_size, fits_in_bin=False)
-        is_large_cube_on_bin = self._check_cube_on_bin(pos_large_cube, pos_bin, self.large_cube_size, fits_in_bin=False)
-        
-        # Check if cubes are static
-        is_small_cube_static = self.small_cube.is_static(lin_thresh=1e-2, ang_thresh=0.5)
-        is_medium_cube_static = self.medium_cube.is_static(lin_thresh=1e-2, ang_thresh=0.5)
-        is_large_cube_static = self.large_cube.is_static(lin_thresh=1e-2, ang_thresh=0.5)
-        
         # Check if cubes are grasped
         is_small_cube_grasped = self.agent.is_grasping(self.small_cube)
         is_medium_cube_grasped = self.agent.is_grasping(self.medium_cube)
         is_large_cube_grasped = self.agent.is_grasping(self.large_cube)
         
-        # Success: ONLY small cube can succeed (others are too big for bin)
-        small_cube_success = is_small_cube_on_bin & is_small_cube_static & (~is_small_cube_grasped)
-        # Medium and large cubes cannot succeed as they don't fit in the bin
-        success = small_cube_success
+        # Success: grasp the small cube (the one that fits in the bin)
+        # Perception task only requires identifying and grasping the correct size
+        success = is_small_cube_grasped
         
         return {
             "is_small_cube_grasped": is_small_cube_grasped,
             "is_medium_cube_grasped": is_medium_cube_grasped,
             "is_large_cube_grasped": is_large_cube_grasped,
-            "is_small_cube_on_bin": is_small_cube_on_bin,
-            "is_medium_cube_on_bin": is_medium_cube_on_bin,
-            "is_large_cube_on_bin": is_large_cube_on_bin,
-            "is_small_cube_static": is_small_cube_static,
-            "is_medium_cube_static": is_medium_cube_static,
-            "is_large_cube_static": is_large_cube_static,
             "success": success,
         }
-
-    def _check_cube_on_bin(self, pos_cube, pos_bin, cube_size, fits_in_bin=True):
-        """Check if cube is on top of the bin"""
-        offset = pos_cube - pos_bin
-        
-        if fits_in_bin:
-            # For small cube that fits in bin - standard check
-            xy_flag = torch.linalg.norm(offset[..., :2], axis=1) <= 0.01
-            z_flag = (
-                torch.abs(offset[..., 2] - cube_size - self.block_half_size[0]) <= 0.01
-            )
-        else:
-            # For medium/large cubes that don't fit - they can't be successfully placed
-            # Make the check impossible to pass
-            xy_flag = torch.zeros_like(offset[..., 0], dtype=torch.bool)
-            z_flag = torch.zeros_like(offset[..., 0], dtype=torch.bool)
-        
-        return torch.logical_and(xy_flag, z_flag)
 
     def _get_obs_extra(self, info: Dict):
         obs = dict(
@@ -353,72 +322,22 @@ class PerceptionPlaceRightCubesHardEnv(BaseEnv):
         return obs
 
     def compute_dense_reward(self, obs: Any, action: torch.Tensor, info: Dict):
-        # reaching reward - reward for getting close to any cube
+        # reaching reward - reward for getting close to the SMALL CUBE (the target that fits)
         tcp_pose = self.agent.tcp.pose.p
         small_cube_pos = self.small_cube.pose.p
-        medium_cube_pos = self.medium_cube.pose.p
-        large_cube_pos = self.large_cube.pose.p
         
         obj_to_tcp_dist_small = torch.linalg.norm(tcp_pose - small_cube_pos, axis=1)
-        obj_to_tcp_dist_medium = torch.linalg.norm(tcp_pose - medium_cube_pos, axis=1)
-        obj_to_tcp_dist_large = torch.linalg.norm(tcp_pose - large_cube_pos, axis=1)
-        obj_to_tcp_dist = torch.minimum(
-            torch.minimum(obj_to_tcp_dist_small, obj_to_tcp_dist_medium),
-            obj_to_tcp_dist_large
-        )
-        reward = 2 * (1 - torch.tanh(5 * obj_to_tcp_dist))
+        reward = 2 * (1 - torch.tanh(5 * obj_to_tcp_dist_small))
 
-        # grasp and place reward - only give placement reward for small cube (others can't fit)
-        bin_top_pos_small = self.bin.pose.p.clone()
-        bin_top_pos_small[:, 2] = bin_top_pos_small[:, 2] + self.block_half_size[0] + self.small_cube_size
-        
-        small_cube_to_bin_dist = torch.linalg.norm(bin_top_pos_small - small_cube_pos, axis=1)
-        
-        # Reward based on whichever cube is grasped
+        # grasp reward - reward for grasping the correct (small) cube
         is_small_cube_grasped = info["is_small_cube_grasped"]
-        is_medium_cube_grasped = info["is_medium_cube_grasped"]
-        is_large_cube_grasped = info["is_large_cube_grasped"]
-        
-        # Only small cube gets placement reward (others can't fit in bin)
-        small_cube_place_reward = 1 - torch.tanh(5.0 * small_cube_to_bin_dist)
-        reward[is_small_cube_grasped] = (4 + small_cube_place_reward)[is_small_cube_grasped]
-        
-        # Medium and large cubes get reduced reward since they can't complete the task
-        reward[is_medium_cube_grasped] = 3.0
-        reward[is_large_cube_grasped] = 3.0
+        reward[is_small_cube_grasped] = 5.0
 
-        # ungrasp and static reward - only for small cube success
-        gripper_width = (self.agent.robot.get_qlimits()[0, -1, 1] * 2).to(self.device)
-        is_any_cube_grasped = torch.logical_or(
-            torch.logical_or(is_small_cube_grasped, is_medium_cube_grasped),
-            is_large_cube_grasped
-        )
-        ungrasp_reward = (
-            torch.sum(self.agent.robot.get_qpos()[:, -2:], axis=1) / gripper_width
-        )
-        ungrasp_reward[
-            ~is_any_cube_grasped
-        ] = 16.0  # give ungrasp a bigger reward
-        
-        # Static reward for small cube (only one that can succeed)
-        small_cube_v = torch.linalg.norm(self.small_cube.linear_velocity, axis=1)
-        small_cube_av = torch.linalg.norm(self.small_cube.angular_velocity, axis=1)
-        small_cube_static_reward = 1 - torch.tanh(small_cube_v * 10 + small_cube_av)
-        
-        robot_static_reward = self.agent.is_static(0.2)
-        
-        is_small_cube_on_bin = info["is_small_cube_on_bin"]
-        
-        # Only small cube can be successfully placed
-        reward[is_small_cube_on_bin] = (
-            6 + (ungrasp_reward + small_cube_static_reward + robot_static_reward) / 3.0
-        )[is_small_cube_on_bin]
-
-        # success reward - only for small cube
-        reward[info["success"]] = 13
+        # success reward - successfully grasped the small cube
+        reward[info["success"]] = 10.0
         return reward
 
     def compute_normalized_dense_reward(self, obs: Any, action: Array, info: Dict):
         # this should be equal to compute_dense_reward / max possible reward
-        max_reward = 13.0
+        max_reward = 10.0
         return self.compute_dense_reward(obs=obs, action=action, info=info) / max_reward
