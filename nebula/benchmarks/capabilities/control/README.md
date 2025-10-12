@@ -13,8 +13,10 @@ Unlike Perception or Language tasks that rely heavily on understanding, Control 
 | Hard           | 5+ sequential actions  | Fine precision (*e.g.,* peg-in-hole alignment)               | Plug connector into electrical socket  |
 
 ## Task Preview
+Examples of control tasks across three difficulty levels in the benchmark. Green marks objects, red marks targets, and blue indicates contextual cues. <u>**Bold underlined**</u> text shows actions;
+<u>*italic underlined*</u> text gives clarifications.
 
-We will put a figure at here
+![Task Examples](../../../../figures/Control_README.png)
 
 ## Task Details Table
 
