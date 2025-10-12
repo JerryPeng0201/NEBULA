@@ -17,12 +17,13 @@ All Perception tasks are categorized into three primary **attribute types**: **c
 > Each episode tests only one attribute type at a time to isolate perception performance. Tasks with multiple overlapping attributes are not used in this benchmark to avoid confounding evaluation.
 
 ## Task Preview
+Examples of Perception tasks across three difficulty levels in the benchmark. Red marks targets and blue indicates contextual cues. <u>**Bold underlined**</u> text shows actions; <u>*italic underlined*</u> text gives clarifications.
 
-We will put a figure at here
+![Task Examples](../../../../figures/Perception_README.png)
 
 ## Task Details Table
 
-The table below summarizes the key properties of each Control task included in the benchmark. The “Task Names” column lists the environment identifiers (env_id) corresponding to each specific task. “Dense Reward” indicates whether a dense reward signal is available during training. “Eval Conditions” specifies any predefined evaluation constraints or success criteria. The “Demos” column shows whether demonstration data is provided, such as motion planning trajectories or scripted rollouts. “Max Episode Steps” denotes the default upper limit on the number of steps per episode. Finally, “Teleoperation” indicates whether human-collected trajectories are available for the task, typically gathered through manual teleoperation.
+The table below summarizes the key properties of each Perception task included in the benchmark. The “Task Names” column lists the environment identifiers (env_id) corresponding to each specific task. “Dense Reward” indicates whether a dense reward signal is available during training. “Eval Conditions” specifies any predefined evaluation constraints or success criteria. The “Demos” column shows whether demonstration data is provided, such as motion planning trajectories or scripted rollouts. “Max Episode Steps” denotes the default upper limit on the number of steps per episode. Finally, “Teleoperation” indicates whether human-collected trajectories are available for the task, typically gathered through manual teleoperation.
 
 
 |          Task Names               | Dense Reward | Eval Conditions | Demos | Max Episode Steps | Teleoperation |
