@@ -1,10 +1,5 @@
-from .capabilities.control.easy import *
-from .capabilities.control.medium import *
-from .capabilities.control.hard import *
-
-from .capabilities.perception.easy import *
-from .capabilities.perception.medium import *
-from .capabilities.perception.hard import *
+from .capabilities.control import *
+from .capabilities.perception import *
 
 from .capabilities.language.easy import *
 from .capabilities.language.medium import *
