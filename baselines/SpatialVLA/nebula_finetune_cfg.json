@@ -1,0 +1,41 @@
+{
+  "use_nebula_dataset": true,
+  "nebula_data_root": "/home/yanyan/mnt_yanyan_hpc_nebula_alpha",
+  "nebula_tasks": "DynamicMedium-PickSlidingCube",
+  "max_trajectories_per_task": 500,
+  "model_name_or_path": "/HDD1/embodied_ai/checkpoints/spatialvla/pretrained/spatialvla-4b-224-pt",
+  "output_dir": "/HDD1/embodied_ai/open_source_test",
+  
+  "do_train": true,
+  "per_device_train_batch_size": 1,
+  "gradient_accumulation_steps": 4,
+  "num_train_epochs": 100,
+  "max_steps": -1,
+  
+  "learning_rate": 5e-5,
+  "weight_decay": 0.01,
+  "lr_scheduler_type": "cosine",
+  "warmup_ratio": 0.03,
+  
+  "logging_steps": 10,
+  "save_steps": 500,
+  "save_total_limit": 3,
+  "evaluation_strategy": "no",
+  
+  "dataloader_num_workers": 4,
+  "remove_unused_columns": false,
+  "dataloader_pin_memory": true,
+  
+  "bf16": true,
+  "tf32": true,
+  "ddp_find_unused_parameters": true,
+  "ddp_backend": "nccl",
+  
+  "lora": 32,
+  "lora_alpha": 64,
+  "lora_target": "linear",
+  
+  "seed": 42,
+  "report_to": [],
+  "run_name": "nebula_finetune_2gpu"
+}

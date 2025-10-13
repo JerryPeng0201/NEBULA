@@ -1,0 +1,97 @@
+# Experiment Configuration
+experiment:
+  dataset_root: "/home/yanyan/mnt_yanyan_hpc_nebula_alpha"
+  save_dir: "/HDD1/embodied_ai/open_source_test/gr00t/gr00t_json_results"
+  random_seed: 0
+  num_traj: 2
+  max_episode_steps: 400
+  base_seed: 20241201
+
+# Model Configuration
+model:
+  model_path: "/HDD1/embodied_ai/checkpoints/Nebula_finetune/gr00t/nebula"
+  data_config_name: "custom_panda_hdf5"
+  embodiment_tag: "new_embodiment"
+  denoising_steps: 4
+
+# Environment Configuration
+environment:
+  obs_mode: "rgb"
+  control_mode: "pd_joint_pos"
+  render_mode: "rgb_array"
+  reward_mode: "sparse"
+  shader: "default"
+  sim_backend: "auto"
+
+# Task Lists
+tasks:
+  capability:
+    - "Control-PlaceSphere-Easy"
+    - "Control-PushCube-Easy"
+    - "Control-StackCube-Easy"
+    - "Control-PlaceSphere-Medium"
+    - "Control-PegInsertionSide-Medium"
+    - "Control-StackCube-Medium"
+    - "Control-PlaceSphere-Hard"
+    - "Control-PlugCharger-Hard"
+    - "Control-StackCube-Hard"
+    - "Perception-PickBiggerSphere-Easy"
+    - "Perception-PickRedSphere-Easy"
+    - "Perception-PickSphere-Easy"
+    - "Perception-PlaceRedT-Medium"
+    - "Perception-PlaceDiffCubes-Medium"
+    - "Perception-PlaceWhitePeg-Medium"
+    - "Perception-PlaceRedT-Hard"
+    - "Perception-PlaceRightCubes-Hard"
+    - "Perception-PlacePeg-Hard"
+    - "Language-PickCube-Easy"
+    - "Language-GrabBlock-Easy"
+    - "Language-PlaceCube-Easy"
+    - "Language-PickCube-Medium"
+    - "Language-GrabBlock-Medium"
+    - "Language-PlaceCube-Medium"
+    - "Language-ConditionalPick-Hard"
+    - "Language-SequentialPlace-Hard"
+    - "Language-ReferenceSelect-Hard"
+    - "SpatialReasoning-PlaceBetween-Easy"
+    - "SpatialReasoning-MoveCube-Easy"
+    - "SpatialReasoning-PickCube-Easy"
+    - "SpatialReasoning-PickClosest-Medium"
+    - "SpatialReasoning-PlaceContainer-Medium"
+    - "SpatialReasoning-PickCube-Medium"
+    - "SpatialReasoning-BuildBlock-Hard"
+    - "SpatialReasoning-KitchenAssembly-Hard"
+    - "SpatialReasoning-PickCube-Hard"
+    - "Dynamic-PressSwitch-Easy"
+    - "Dynamic-ColorSwitchPickCube-Easy"
+    - "Dynamic-ShapeSwitchPickCube-Easy"
+    - "Dynamic-PlaceRollingSphere-Medium"
+    - "Dynamic-PickCubeWithCollision-Medium"
+    - "Dynamic-PickCubeWithSliding-Medium"
+    - "Dynamic-RollBallWithDistraction-Hard"
+    - "Dynamic-PlaceRollingSphere-Hard"
+    - "Dynamic-RollBall-Hard"
+    - "Robust-PlaceSphere-Easy"
+    - "Robust-PushCube-Easy"
+    - "Robust-StackCube-Easy"
+    - "Robust-PlaceSphere-Medium"
+    - "Robust-PushCube-Medium"
+    - "Robust-StackCube-Medium"
+    - "Robust-AssemblingKits-Hard"
+    - "Robust-KitchenAssembly-Hard"
+    - "Robust-LiftPegUpright-Hard"
+
+  stress:
+    - "AdaptationTest-MovingCube"
+    - "AdaptationTest-InstructionChange"
+    - "AdaptationTest-PickAndPlace"
+
+video:
+  save_video: true
+  save_dir: "/HDD1/embodied_ai/open_source_test/gr00t/simulation_videos"
+
+figure:
+  model_name: gr00t
+  save_capability_figure: true
+  save_stress_figure: true
+  save_dir: "/HDD1/embodied_ai/open_source_test/gr00t/figures"
