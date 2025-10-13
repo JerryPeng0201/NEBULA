@@ -3,6 +3,7 @@ from typing import Any, Dict, Union
 import gymnasium as gym
 import matplotlib.pyplot as plt
 import numpy as np
+import random
 import sapien
 import torch
 import torch.random
@@ -20,20 +21,26 @@ from nebula.utils.structs import Pose
 from nebula.utils.structs.types import Array, GPUMemoryConfig, SimConfig
 
 
-@register_env("Perception-PickSphere-Easy", max_episode_steps=50)
-class PerceptionPickSphereEasyEnv(BaseEnv):
+@register_env("Language-Straight-Easy", max_episode_steps=50)
+class LanguageStraightEasyEnv(BaseEnv):
     """
     **Task Description:**
-    Grasp the red cube among three objects (blue cube, red cube, and green cube).
-    This is a perception task that tests the robot's ability to identify and grasp the 
-    correct object based on color.
+    Grasp the red cube among three objects (blue cube, red cube, and green cube) based on 
+    language instructions. This is a language grounding task that tests the robot's ability 
+    to understand natural language commands with varying verb choices.
+
+    **Language Commands:**
+    - Random selection from: "{Grab/Pick/Select} red block"
+    - Tests understanding of different verbs for the same action
+    - Uses "block" as a synonym for "cube"
 
     **Randomizations:**
     - The objects are placed at fixed positions: blue cube at x=-0.08, y=-0.05,
     red cube at x=-0.08, y=0.05, and green cube at x=-0.08, y=0.15.
+    - Language command verb is randomly selected each episode
 
     **Success Conditions:**
-    - The red cube is grasped by the robot. No placement is required for perception tasks.
+    - The red cube is grasped by the robot based on the language command
     """
 
     SUPPORTED_ROBOTS = ["panda", "fetch"]
@@ -48,6 +55,17 @@ class PerceptionPickSphereEasyEnv(BaseEnv):
 
     def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, **kwargs):
         self.robot_init_qpos_noise = robot_init_qpos_noise
+        
+        # Language templates with different verbs
+        self.command_templates = [
+            "Grab red block",
+            "Pick red block",
+            "Select red block",
+        ]
+        
+        # Initialize task_instruction to empty string (will be set during reset)
+        self.task_instruction = ""
+        
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
 
     @property
@@ -185,6 +203,10 @@ class PerceptionPickSphereEasyEnv(BaseEnv):
             b = len(env_idx)
             self.table_scene.initialize(env_idx)
 
+            # Randomly select a language command from templates
+            self.task_instruction = random.choice(self.command_templates)
+            print(f"Language Command: '{self.task_instruction}'")
+
             # init the objects at fixed positions
             xyz = torch.zeros((b, 3))
             q = [1, 0, 0, 0]
@@ -216,7 +238,7 @@ class PerceptionPickSphereEasyEnv(BaseEnv):
         is_red_cube_grasped = self.agent.is_grasping(self.red_cube)
         is_green_cube_grasped = self.agent.is_grasping(self.green_cube)
         
-        # Success: grasp the red cube - perception task only requires grasping the correct object
+        # Success: grasp the red cube - language task requires grasping the correct object
         success = is_red_cube_grasped
         
         return {
@@ -224,6 +246,7 @@ class PerceptionPickSphereEasyEnv(BaseEnv):
             "is_red_cube_grasped": is_red_cube_grasped,
             "is_green_cube_grasped": is_green_cube_grasped,
             "success": success,
+            "task_instruction": self.task_instruction,  # Store language command in info
         }
 
     def _get_obs_extra(self, info: Dict):
@@ -264,3 +287,7 @@ class PerceptionPickSphereEasyEnv(BaseEnv):
         # this should be equal to compute_dense_reward / max possible reward
         max_reward = 10.0
         return self.compute_dense_reward(obs=obs, action=action, info=info) / max_reward
+    
+    def get_task_instruction(self):
+        """Return the current language instruction for this episode"""
+        return self.task_instruction

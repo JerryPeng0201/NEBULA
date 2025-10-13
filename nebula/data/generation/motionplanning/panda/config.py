@@ -27,5 +27,10 @@ SOLUTIONS_CONFIG = {
     "Perception-PickRedT-Hard": PerceptionPickRedTHardSolution,
     "Perception-PickRightCubes-Hard": PerceptionPickRightCubesHardSolution,
     "Perception-PickPeg-Hard": PerceptionPickPegHardSolution,
+
+    # ===== Language SOLUTIONS =====
+    "Language-Straight-Easy": LanguageStraightEasySolution,
+    "Language-Negation-Medium": LanguageNegationMediumSolution,
+    "Language-Condition-Hard": LanguageConditionHardSolution,
 }
 

@@ -1,9 +1,6 @@
 from .capabilities.control import *
 from .capabilities.perception import *
-
-from .capabilities.language.easy import *
-from .capabilities.language.medium import *
-from .capabilities.language.hard import *
+from .capabilities.language import *
 
 from .capabilities.spatial.easy import *
 from .capabilities.spatial.medium import *
