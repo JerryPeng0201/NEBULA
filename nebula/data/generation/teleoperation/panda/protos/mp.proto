@@ -1,0 +1,48 @@
+syntax = "proto3";
+package mp;
+
+service Planner {
+  rpc PlanToPose(PlanToPoseRequest) returns (PlanReply);
+  rpc PlanScrew(PlanToPoseRequest) returns (PlanReply);
+  rpc UpdatePointCloud(UpdatePCRequest) returns (StatusReply);
+  rpc ClearCollisions(Empty) returns (StatusReply);
+}
+
+message PlannerConfig {
+  string urdf = 1;                       // Path inside container
+  string srdf = 2;                       // If empty, server uses urdf.replace(".urdf",".srdf")
+  repeated string user_link_names = 3;
+  repeated string user_joint_names = 4;
+  string move_group = 5;                 // e.g. "panda_hand_tcp"
+  repeated double joint_vel_limits = 6;  // len=7
+  repeated double joint_acc_limits = 7;  // len=7
+  repeated double base_pose_pq = 8;      // [px,py,pz,qx,qy,qz,qw]
+  double time_step = 9;                  // e.g. env.control_timestep
+}
+
+message PlanToPoseRequest {
+  PlannerConfig cfg = 1;
+  repeated double target_pq = 2;         // [p(3), q(4)] wrt world
+  repeated double current_qpos = 3;      // len=7
+  bool use_point_cloud = 4;
+}
+
+message Trajectory {
+  repeated double position = 1; // flattened T*7
+  repeated double velocity = 2; // flattened T*7 (may be empty)
+  int32 dof = 3;                // 7
+  int32 n_step = 4;             // T
+}
+
+message PlanReply {
+  string status = 1;   // "Success" or error string
+  Trajectory traj = 2; // set if Success
+}
+
+message UpdatePCRequest {
+  repeated float points = 1;     // flattened Nx3
+  int32 n = 2;
+}
+
+message StatusReply { string status = 1; }
+message Empty {}

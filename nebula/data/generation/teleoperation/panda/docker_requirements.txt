@@ -1,0 +1,6 @@
+grpcio
+grpcio-tools
+numpy
+trimesh
+transforms3d
+mplib
