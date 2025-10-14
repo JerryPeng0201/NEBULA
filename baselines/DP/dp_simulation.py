@@ -224,10 +224,6 @@ def run_episode(env, policy, env_id, config, episode_idx, save_video=False, vide
     else:
         info = {}
     
-    # Reset GPU memory stats
-    if torch.cuda.is_available():
-        torch.cuda.reset_peak_memory_stats()
-    
     while global_steps < config['experiment']['max_episode_steps'] and not done:
         if hasattr(env.unwrapped, 'get_task_instruction'):
             task_description = env.unwrapped.get_task_instruction()

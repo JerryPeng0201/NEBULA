@@ -16,7 +16,7 @@ from tqdm import tqdm
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), 'diffusion_policy'))
 
-from evaluate import evaluate
+from diffusion_policy.diffusion_policy.evaluate import evaluate
 from collections import defaultdict
 import yaml
 
@@ -25,15 +25,19 @@ from torch.utils.data.sampler import RandomSampler, BatchSampler
 from torch.utils.data.dataloader import DataLoader
 from diffusion_policy.diffusion_policy.utils import IterationBasedBatchSampler, worker_init_fn
 from diffusion_policy.diffusion_policy.make_env import make_eval_envs
-from diffusion_policy.diffusers.schedulers.scheduling_ddpm import DDPMScheduler
-from diffusion_policy.diffusers.training_utils import EMAModel
-from diffusion_policy.diffusers.optimization import get_scheduler
+from diffusers.schedulers.scheduling_ddpm import DDPMScheduler
+from diffusers.training_utils import EMAModel
+from diffusers.optimization import get_scheduler
 from diffusion_policy.diffusion_policy.conditional_unet1d import ConditionalUnet1D
 from dataclasses import dataclass, field
 from typing import Optional, List
 import tyro
 import json
 import glob
+
+with open('./config.yaml', 'r') as file:
+    nebula_config = yaml.safe_load(file)
+    dataset_dir = nebula_config['experiment']['dataset_root']
 
 @dataclass
 class Args:
@@ -57,24 +61,10 @@ class Args:
     # Dataset loading options - use either demo_path OR (dataset_root + task_names)
     demo_path: Optional[str] = None
     """the path to a single dataset folder (legacy mode)"""
-
-
-    with open('../../config.yaml', 'r') as file:
-            nebula_config = yaml.safe_load(file)
-            dataset_dir = nebula_config['experiment']['dataset_root']
     
-    dataset_root: str = os.path.expanduser("~/mnt_hpc_data/alpha")
+    dataset_root: str = dataset_dir
     """root directory containing all task datasets"""
-    task_names: List[str] = field(default_factory=lambda: [
-        "Control-PlaceSphere-Easy", "Control-PushCube-Easy", "Control-StackCube-Easy", 
-        "Control-PegInsertionSide-Medium", "Control-PlaceSphere-Medium", "Control-StackCube-Medium", 
-        "Control-PlaceSphere-Hard", "Control-StackCube-Hard", 
-        "Perception-PickBiggerSphere-Easy", "Perception-PickRedSphere-Easy", "Perception-PlaceSphere-Easy", 
-        "Perception-PlaceDiffCubes-Medium", "Perception-PlaceRedT-Medium", "Perception-PlaceWhitePeg-Medium", 
-        "Perception-PlacePeg-Hard", "Perception-PlaceRedT-Hard", "Perception-PlaceRightCubes-Hard", 
-        "DynamicEasy-PressSwitch", "DynamicMedium-PickSlidingCube", "DynamicHard-ColorSwitchPickCube", "DynamicHard-ShapeSwitchPickCube",
-        "SpatialReferenceEasy-MoveCube", "SpatialReferenceEasy-PickCube"
-    ])
+    task_names: List[str] = field(default_factory=lambda: list(nebula_config['tasks']['capability']))
     """list of task names to load data from"""
     
     # Evaluation environment (can be different from training tasks)

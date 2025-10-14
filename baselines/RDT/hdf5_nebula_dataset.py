@@ -50,8 +50,6 @@ class HDF5VLADataset:
         # all tasks in nebula dataset
         self.tasks = []
         self.tasks.extend(config['tasks']['capability'])
-        self.tasks.extend(config['tasks']['stress'])
-
         # Multiple tasks - update with your actual task names
         # self.tasks = ["Control-PlaceSphere-Easy"]
         

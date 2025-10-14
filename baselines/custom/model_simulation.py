@@ -14,6 +14,7 @@ from pathlib import Path
 from datetime import datetime
 from tqdm import tqdm
 import imageio
+import psutil
 
 TASK_DESCRIPTIONS = {
     # control tasks
@@ -140,6 +141,11 @@ def run_episode(env, policy, env_id, config, episode_idx, save_video=False, vide
     global_steps = 0
     task_description_record = ""
     done = False
+    episode_gpu_memory_peak = 0
+    episode_cpu_memory_peak = 0
+
+    if torch.cuda.is_available():
+        torch.cuda.reset_peak_memory_stats()
     
     if hasattr(env, 'evaluate'):
         info = env.evaluate()
@@ -159,7 +165,6 @@ def run_episode(env, policy, env_id, config, episode_idx, save_video=False, vide
             task_description_record += task_description
         
         model_obs = nebula_to_model_obs(obs, task_description, info)
-        
         start_time = time.perf_counter()
         
         # --- modify here based on your policy's API ---
@@ -168,6 +173,14 @@ def run_episode(env, policy, env_id, config, episode_idx, save_video=False, vide
         
         inference_time = time.perf_counter() - start_time
         episode_inference_times.append(inference_time)
+
+        post_gpu = get_gpu_memory_usage()
+        post_cpu = get_cpu_memory_usage()
+
+        if post_gpu:
+            episode_gpu_memory_peak = max(episode_gpu_memory_peak, post_gpu['allocated'])
+        if post_cpu:
+            episode_cpu_memory_peak = max(episode_cpu_memory_peak, post_cpu['rss'])
         
         nebula_actions = model_to_nebula_action(model_action)
         
@@ -198,7 +211,9 @@ def run_episode(env, policy, env_id, config, episode_idx, save_video=False, vide
         'success': info.get('success', False),
         'steps': global_steps,
         'avg_inference_time': float(np.mean(episode_inference_times)),
-        'stability_score': calculate_stability_score(action_history)
+        'stability_score': calculate_stability_score(action_history),
+        'gpu_memory_peak': episode_gpu_memory_peak,
+        'cpu_memory_peak': episode_cpu_memory_peak,
     }
 
 def evaluate_task(env_id, policy, config):
@@ -358,14 +373,14 @@ def generate_conclusion(config, test_type):
     print(f"Average GPU Memory Peak: {summary['overall_metrics']['average_gpu_memory_peak']:.2f} MB")
     print(f"Average CPU Memory Peak: {summary['overall_metrics']['average_cpu_memory_peak']:.2f} MB")
 
-def save_task_result(task_result, config, is_first_task=False, test_type='all'):
+def save_task_result(task_result, config, param_info, is_first_task=False, test_type='all'):
+    """Save task result to JSON file."""
     output_dir = Path(config['experiment']['save_dir'])
     output_dir.mkdir(parents=True, exist_ok=True)
     
     session_id = config.get('session_id')
     results_file = output_dir / f'results_{test_type}_{session_id}.json'
     
-    # Load or create results structure
     if results_file.exists():
         with open(results_file, 'r') as f:
             results_data = json.load(f)
@@ -375,14 +390,13 @@ def save_task_result(task_result, config, is_first_task=False, test_type='all'):
             'session_id': session_id,
             'timestamp': datetime.now().isoformat(),
             'config': serializable_config,
+            'model_size': f"{param_info['total'] * 4 / 1024**2:.1f} MB (assuming float32)",
             'results': []
         }
     
-    # Append task result
     serializable_task_result = make_json_serializable(task_result)
     results_data['results'].append(serializable_task_result)
     
-    # Write atomically
     temp_file = output_dir / f'results_{test_type}_{session_id}.json.tmp'
     with open(temp_file, 'w') as f:
         json.dump(results_data, f, indent=2)
@@ -406,6 +420,7 @@ def main():
     torch.cuda.manual_seed(config['experiment']['random_seed'])
     
     policy = create_model_policy(config)
+    param_info = count_parameters(policy)
     
     if args.tasks:
         tasks = args.tasks
@@ -418,7 +433,7 @@ def main():
     
     for idx, task in enumerate(tqdm(tasks, desc="Overall Progress")):
         result = evaluate_task(task, policy, config)
-        save_task_result(result, config, is_first_task=(idx == 0),test_type=args.test_type)
+        save_task_result(result, config, param_info, is_first_task=(idx == 0), test_type=args.test_type)
 
     generate_conclusion(config, args.test_type)
 
