@@ -1,4 +1,4 @@
-# Running Nebula teleoperation (sim) with Dockerized `mplib`
+# Running Nebula teleoperation (Simulation) with Dockerized `mplib`
 
 ## Overview: Teleoperation with Dockerized Motion Planning
 
@@ -12,8 +12,8 @@ Nebula teleoperation provides an intuitive click-and-drag interface, powered by 
 For practical integration examples, see [`remote_motionplanner.py`](panda/remote_motionplanner.py). The [protos](panda/protos) directory contains gRPC protocol definitions, and [server.py](panda/server.py) provides the server implementation.
 
 ---
-
-## 1. Install Dependencies
+## Instructions
+### 1. Install Dependencies
 
 1. Ensure **conda** (Anaconda or Miniconda) and **git** are installed. Create and activate a conda environment:
   ```bash
@@ -41,7 +41,7 @@ Use the **nebula** environment for all subsequent operations.
 
 ---
 
-## 2. Build the Docker Image for **mplib** Motion Planning Service
+### 2. Build the Docker Image for **mplib** Motion Planning Service
 
 1. Navigate to the Nebula directory:
   ```bash
@@ -62,7 +62,7 @@ Use the **nebula** environment for all subsequent operations.
 
 ---
 
-## 3. Start Data Collection
+### 3. Start Data Collection
 
 **For macOS, in another terminal**, set environment variables and start data collection:
 
@@ -75,6 +75,12 @@ Use the **nebula** environment for all subsequent operations.
   ```bash
   python -m nebula.data.generation.teleoperation.panda.interactive -e Control-PegInsertionSide-Medium --save-video --subtask-idx 3 --task_instruction="Pick up a orange-white peg and insert the orange end into the box with a hole in it."
   ```
+
+For more options and details, display the help message with:
+
+```bash
+python -m nebula.data.generation.teleoperation.panda.interactive -h
+```
 
 **Workflow:**
 1. Review task instructions in `nebula/benchmarks/capabilities/*`.
@@ -99,6 +105,12 @@ n: execute motion planning to target pose
 c: end episode and record trajectory
 q: quit and save data
 ```
+
+---
+
+### 4. Customization
+
+To adapt Nebula Teleoperation for a different robot, use the [Panda implementation](panda) as a reference. For each new robot, implement a local motion planner solver and/or a remote motion planner solver. The local solver can follow the approach in [Nebula Motion Planning data collection](../motionplanning/README.md). Update relevant files and configurations to ensure compatibility with your robot model and specific tasks.
 
 ---
 
