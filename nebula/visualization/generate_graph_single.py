@@ -45,7 +45,7 @@ def load_json_files(results_dir):
 
 def extract_capability_scores(results):
     """Extract capability test scores organized by difficulty level"""
-    categories = ['Control', 'Perception', 'Language', 'SpatialReasoning', 'Dynamic', 'Robust']
+    categories = ['Control', 'Perception', 'Language', 'Spatial', 'Dynamic', 'Robust']
     
     easy_scores = {cat: [] for cat in categories}
     medium_scores = {cat: [] for cat in categories}

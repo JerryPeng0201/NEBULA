@@ -73,7 +73,7 @@ pip install -e .
 # Download commands here
 ```
 
-### Dataset Collection
+### 📁 Dataset Collection
 
 To collect your own dataset, run the command below:
 

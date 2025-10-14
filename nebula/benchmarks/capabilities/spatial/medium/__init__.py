@@ -1,3 +1,3 @@
-from .pick_cube import SpatialReasoningMediumPickCubeEnv
-from .place_container import SpatialReasoningMediumPlaceContainerEnv
-from .pick_closest import SpatialReasoningMediumPickClosestEnv
+from .pick_cube import SpatialMediumPickCubeEnv
+from .place_container import SpatialMediumPlaceContainerEnv
+from .pick_closest import SpatialMediumPickClosestEnv

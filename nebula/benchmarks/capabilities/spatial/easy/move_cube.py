@@ -15,8 +15,8 @@ from nebula.utils.scene_builder.table import TableSceneBuilder
 from nebula.utils.structs.pose import Pose
 
 
-@register_env("SpatialReasoning-MoveCube-Easy", max_episode_steps=50)
-class SpatialReasoningEasyMoveCubeEnv(BaseEnv):
+@register_env("Spatial-MoveCube-Easy", max_episode_steps=50)
+class SpatialEasyMoveCubeEnv(BaseEnv):
     """
     **Task Description:**
     The goal is to pick up a red cube and place it in a specified spatial relationship 

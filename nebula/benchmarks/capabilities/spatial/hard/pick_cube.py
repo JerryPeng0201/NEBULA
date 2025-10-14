@@ -43,8 +43,8 @@ Success Conditions:
 - Robot maintains stability throughout the task
 """
 
-@register_env("SpatialReasoning-PickCube-Hard", max_episode_steps=200)
-class SpatialReasoningHardPickCubeEnv(BaseEnv):
+@register_env("Spatial-PickCube-Hard", max_episode_steps=150)
+class SpatialHardPickCubeEnv(BaseEnv):
     
     SUPPORTED_ROBOTS = ["panda", "fetch"]
     agent: Union[Panda, Fetch]
@@ -761,4 +761,4 @@ class SpatialReasoningHardPickCubeEnv(BaseEnv):
     def get_task_instruction(self):
         return self._generate_task_instruction()
 
-SpatialReasoningHardPickCubeEnv.__doc__ = SPATIAL_HARD_DOC_STRING
+SpatialHardPickCubeEnv.__doc__ = SPATIAL_HARD_DOC_STRING

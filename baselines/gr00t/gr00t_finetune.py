@@ -55,7 +55,7 @@ class ArgsConfig:
         "Perception-PlaceDiffCubes-Medium", "Perception-PlaceRedT-Medium", "Perception-PlaceWhitePeg-Medium", 
         "Perception-PlacePeg-Hard", "Perception-PlaceRedT-Hard", "Perception-PlaceRightCubes-Hard", 
         "DynamicEasy-PressSwitch", "DynamicMedium-PickSlidingCube", "DynamicHard-ColorSwitchPickCube", "DynamicHard-ShapeSwitchPickCube",
-        "SpatialReasoningEasy-MoveCube", "SpatialReasoningEasy-PickCube"])  # Will auto-discover if None
+        "SpatialEasy-MoveCube", "SpatialEasy-PickCube"])  # Will auto-discover if None
     """List of task names to include. If None, will use all tasks in dataset_root."""
     
     subtask_name: str = "0"

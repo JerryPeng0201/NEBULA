@@ -533,8 +533,8 @@ class HDF5LeRobotDataset(LeRobotSingleDataset):
             "DynamicHard-ShapeSwitchPickCube": "Pick up the cube",
 
             # ===== Spatial Reference Tasks =====
-            "SpatialReasoningEasy-MoveCube": "Move the red cube to the right of the green cube",
-            "SpatialReasoningEasy-PickCube": "Pick up the cube and place it at the middle",
+            "SpatialEasy-MoveCube": "Move the red cube to the right of the green cube",
+            "SpatialEasy-PickCube": "Pick up the cube and place it at the middle",
 
             # Add more task mappings as needed
         }

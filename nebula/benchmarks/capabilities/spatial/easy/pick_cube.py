@@ -41,8 +41,8 @@ Success Conditions:
 - Robot is static after completion
 """
 
-@register_env("SpatialReasoning-PickCube-Easy", max_episode_steps=75)
-class SpatialReasoningEasyPickCubeEnv(BaseEnv):
+@register_env("Spatial-PickCube-Easy", max_episode_steps=50)
+class SpatialEasyPickCubeEnv(BaseEnv):
     
     SUPPORTED_ROBOTS = ["panda", "fetch"]
     agent: Union[Panda, Fetch]
@@ -420,4 +420,4 @@ class SpatialReasoningEasyPickCubeEnv(BaseEnv):
     def get_task_instruction(self):
         return self.task_instruction
 
-SpatialReasoningEasyPickCubeEnv.__doc__ = SPATIAL_EASY_DOC_STRING
+SpatialEasyPickCubeEnv.__doc__ = SPATIAL_EASY_DOC_STRING

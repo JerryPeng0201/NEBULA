@@ -45,8 +45,8 @@ Success Conditions:
 - Placement accuracy is within acceptable tolerance
 """
 
-@register_env("SpatialReasoning-PlaceBetween-Easy", max_episode_steps=100)
-class SpatialReasoningEasyPlaceBetweenEnv(BaseEnv):
+@register_env("Spatial-PlaceBetween-Easy", max_episode_steps=50)
+class SpatialEasyPlaceBetweenEnv(BaseEnv):
     """Place the red cube between two reference cubes (blue & green)."""
 
     SUPPORTED_ROBOTS = ["panda", "fetch"]
@@ -392,4 +392,4 @@ class SpatialReasoningEasyPlaceBetweenEnv(BaseEnv):
         return self.compute_dense_reward(obs=obs, action=action, info=info) / 14.0
 
 
-SpatialReasoningEasyPlaceBetweenEnv.__doc__ = SPATIAL_BETWEEN_DOC_STRING
+SpatialEasyPlaceBetweenEnv.__doc__ = SPATIAL_BETWEEN_DOC_STRING

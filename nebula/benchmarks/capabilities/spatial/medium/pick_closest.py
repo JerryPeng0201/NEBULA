@@ -27,8 +27,8 @@ Success Conditions:
 - Correctly pick and lift the closest cube.
 """
 
-@register_env("SpatialReasoning-PickClosest-Medium", max_episode_steps=100)
-class SpatialReasoningMediumPickClosestEnv(BaseEnv):
+@register_env("Spatial-PickClosest-Medium", max_episode_steps=75)
+class SpatialMediumPickClosestEnv(BaseEnv):
     
     SUPPORTED_ROBOTS = ["panda", "fetch"]
     agent: Union[Panda, Fetch]
@@ -296,4 +296,4 @@ class SpatialReasoningMediumPickClosestEnv(BaseEnv):
                 penalty += wrong_grasp * 0.3
         return penalty
 
-SpatialReasoningMediumPickClosestEnv.__doc__ = SPATIAL_REFERENCE_MEDIUM_PICK_CLOSEST
+SpatialMediumPickClosestEnv.__doc__ = SPATIAL_REFERENCE_MEDIUM_PICK_CLOSEST

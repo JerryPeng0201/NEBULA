@@ -35,8 +35,8 @@ Success Conditions:
 - Robot maintains stability throughout
 """
 
-@register_env("SpatialReasoning-PickCube-Medium", max_episode_steps=100)
-class SpatialReasoningMediumPickCubeEnv(BaseEnv):
+@register_env("Spatial-PickCube-Medium", max_episode_steps=75)
+class SpatialMediumPickCubeEnv(BaseEnv):
     
     SUPPORTED_ROBOTS = ["panda", "fetch"]
     agent: Union[Panda, Fetch]
@@ -474,4 +474,4 @@ class SpatialReasoningMediumPickCubeEnv(BaseEnv):
     def get_task_instruction(self):
         return self.task_instruction
 
-SpatialReasoningMediumPickCubeEnv.__doc__ = SPATIAL_MEDIUM_DOC_STRING
+SpatialMediumPickCubeEnv.__doc__ = SPATIAL_MEDIUM_DOC_STRING

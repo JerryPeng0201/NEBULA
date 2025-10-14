@@ -50,8 +50,8 @@ Success Conditions:
 - Placement accuracy is within acceptable 3D tolerance
 """
 
-@register_env("SpatialReasoning-PlaceContainer-Medium", max_episode_steps=120)
-class SpatialReasoningMediumPlaceContainerEnv(BaseEnv):
+@register_env("Spatial-PlaceContainer-Medium", max_episode_steps=75)
+class SpatialMediumPlaceContainerEnv(BaseEnv):
     
     SUPPORTED_ROBOTS = ["panda", "fetch"]
     agent: Union[Panda, Fetch]
@@ -508,4 +508,4 @@ class SpatialReasoningMediumPlaceContainerEnv(BaseEnv):
     def get_task_instruction(self):
         return self.task_instruction
 
-SpatialReasoningMediumPlaceContainerEnv.__doc__ = SPATIAL_PLACE_CONTAINER_DOC_STRING
+SpatialMediumPlaceContainerEnv.__doc__ = SPATIAL_PLACE_CONTAINER_DOC_STRING

@@ -43,9 +43,9 @@ TASK_DESCRIPTIONS = {
     "Perception-PlacePeg-Hard": "Place the peg that has red color at the middle into the bin",
     
     # spatial reasoning tasks
-    "SpatialReasoning-PlaceBetween-Easy": "Place the red cube between the blue and green cube",
-    "SpatialReasoning-PickClosest-Medium": "Pick the cube which is closest to the red cube",
-    "SpatialReasoning-BuildBlock-Hard": "Create a three-level tower: red cube at bottom, green cube in middle, blue triangle at top.",
+    "Spatial-PlaceBetween-Easy": "Place the red cube between the blue and green cube",
+    "Spatial-PickClosest-Medium": "Pick the cube which is closest to the red cube",
+    "Spatial-BuildBlock-Hard": "Create a three-level tower: red cube at bottom, green cube in middle, blue triangle at top.",
     
     # dynamic tasks
     "Dynamic-PressSwitch-Easy": "Only press the switch after the light turns red",

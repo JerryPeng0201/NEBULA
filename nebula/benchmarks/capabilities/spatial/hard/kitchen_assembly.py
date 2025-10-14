@@ -29,8 +29,8 @@ Success Conditions:
 - Stable object placement
 """
 
-@register_env("SpatialReasoning-KitchenAssembly-Hard", max_episode_steps=200)
-class SpatialReasoningHardKitchenAssemblyEnv(BaseEnv):
+@register_env("Spatial-KitchenAssembly-Hard", max_episode_steps=150)
+class SpatialHardKitchenAssemblyEnv(BaseEnv):
     SUPPORTED_ROBOTS = ["panda", "fetch"]
     agent: Union[Panda, Fetch]
 
@@ -488,4 +488,4 @@ class SpatialReasoningHardKitchenAssemblyEnv(BaseEnv):
     def get_task_instruction(self):
         return self.task_instruction
 
-SpatialReasoningHardKitchenAssemblyEnv.__doc__ = SPATIAL_KITCHEN_ASSEMBLY_DOC_STRING
+SpatialHardKitchenAssemblyEnv.__doc__ = SPATIAL_KITCHEN_ASSEMBLY_DOC_STRING

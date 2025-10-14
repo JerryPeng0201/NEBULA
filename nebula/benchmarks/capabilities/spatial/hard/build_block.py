@@ -46,8 +46,8 @@ Challenge Aspects:
 - Evaluates physical intuition about stacking stability
 """
 
-@register_env("SpatialReasoning-BuildBlock-Hard", max_episode_steps=200)
-class SpatialReasoningHardBuildBlockEnv(BaseEnv):
+@register_env("Spatial-BuildBlock-Hard", max_episode_steps=150)
+class SpatialHardBuildBlockEnv(BaseEnv):
     
     SUPPORTED_ROBOTS = ["panda", "fetch"]
     agent: Union[Panda, Fetch]
@@ -826,4 +826,4 @@ class SpatialReasoningHardBuildBlockEnv(BaseEnv):
         else:
             return torch.tensor(0.0, device=self.device)
 
-SpatialReasoningHardBuildBlockEnv.__doc__ = SPATIAL_HARD_BUILD_DOC_STRING
+SpatialHardBuildBlockEnv.__doc__ = SPATIAL_HARD_BUILD_DOC_STRING
