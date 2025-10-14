@@ -23,7 +23,19 @@ This is the official repository of NEBULA, featuring:
 ## 📰 News
 
 - [Oct 15, 2025] Our paper has been uploaded to arXiv
+
 - [Oct 15, 2025] NEBULA-α v1.0 has released
+
+## ⏳ Coming Soon
+
+The following features have been completed and are currently being prepared for public release:
+
+- Dataset Adapters for External Sources: Plug-and-play converters for LeRobot, Mobile-ALOHA, RobotNet, and more.
+
+- NEBULA Native Dataset on HuggingFace: Fully structured NEBULA-format episodes hosted via HuggingFace Datasets.
+
+- Finetuned Checkpoints of Baseline Models: Finetuned weights for all official baselines to support plug-in evaluation and transfer.
+
 
 ## 🚪 Portals – Quick Access
 
@@ -204,7 +216,7 @@ If you are interested in collaborating, conducting joint research, or integratin
 
 - **Dr. Yu Yin** (Assistant Professor, Case Western Reserve University): `yxy1421 at case.edu`
 
-- **Jerry Peng** (Project Lead, Case Western Reserve University): `jxp1146 at case.edu`
+- **Jierui Peng** (Project Lead, Case Western Reserve University): `jxp1146 at case.edu`
 
 We are actively building partnerships across academia and industry to expand the NEBULA ecosystem. Join us!
 
@@ -217,6 +229,23 @@ We would also like to thank [**Professor Yu Yin**](https://case.edu/engineering/
 
 Salute! 🫡
 
+## 👤 Authors
+
+**NEBULA** is developed and maintained by:
+
+- **Jierui Peng** 
+
+- **Yanyan Zhang** 
+
+- **Yicheng Duan**  
+
+- **Tuo Liang**
+
+With guidance from:
+
+- **Prof. Yu Yin** (Assistant Professor @ Case Western Reserve University) [*Corresponding Author*]  
+
+- **Prof. Vipin Chaudhary** (Department Chair @ Case Western Reserve University)
 
 ## 📚 Citation
 
