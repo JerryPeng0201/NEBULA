@@ -22,7 +22,7 @@ For practical integration examples, see [`remote_motionplanner.py`](panda/remote
   python -m pip install --upgrade pip
   ```
 
-2. In the **nebula** environment, install ManiSkill ([docs](https://maniskill.readthedocs.io/en/latest/user_guide/getting_started/installation.html)). For macOS-specific instructions, see [here](https://maniskill.readthedocs.io/en/latest/user_guide/getting_started/macos_install.html).
+2. With the **nebula** environment activated, install the required dependencies. If you are using macOS, refer to the [Vulkan macOS installation guide](https://maniskill.readthedocs.io/en/latest/user_guide/getting_started/macos_install.html) for platform-specific steps.
   ```bash
   pip install --upgrade mani_skill torch
   ```
@@ -57,7 +57,7 @@ Use the **nebula** environment for all subsequent operations.
 
   **Run the container:**
   ```bash
-  docker run --platform=linux/amd64 --rm -p 50051:50051 -v $(pwd)nebula/assets:/app/assets mplib-grpc-panda:amd64
+  docker run --platform=linux/amd64 --rm -p 50051:50051 -v $(pwd)/nebula/assets:/app/assets mplib-grpc-panda:amd64
   ```
 
 ---
