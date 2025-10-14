@@ -43,14 +43,14 @@ Randomizations:
 - Timing of ball movement varies
 """
 
-@register_env("Dynamic-RollBallWithDistraction-Hard", max_episode_steps=100)
-class DistractorBallPickCubeEnv(BaseEnv):
+@register_env("Dynamic-DistractorBallPickCube-Hard", max_episode_steps=100)
+class DynamicHardDistractorBallPickCubeEnv(BaseEnv):
     
     SUPPORTED_ROBOTS = ["panda", "fetch"]
     agent: Union[Panda, Fetch]
     
     cube_half_size = 0.025
-    ball_radius = 0.015
+    ball_radius = 0.025
     lift_thresh = 0.05
     
     # Table workspace bounds
@@ -361,4 +361,4 @@ class DistractorBallPickCubeEnv(BaseEnv):
         # Call parent step method
         return super().step(action)
 
-DistractorBallPickCubeEnv.__doc__ = DISTRACTOR_BALL_DOC_STRING
+DynamicHardDistractorBallPickCubeEnv.__doc__ = DISTRACTOR_BALL_DOC_STRING

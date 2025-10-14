@@ -20,11 +20,11 @@ from nebula.utils.scene_builder.table import TableSceneBuilder
 from nebula.utils.structs import Pose
 from nebula.utils.structs.types import Array, GPUMemoryConfig, SimConfig
 
-@register_env("Dynamic-PlaceRollingSphere-Hard", max_episode_steps=300)
-class PlaceRollingSphereEnv(BaseEnv):
+@register_env("Dynamic-CatchRollingSphere-Hard", max_episode_steps=300)
+class DynamicHardCatchRollingSphereEnv(BaseEnv):
     """
     **Task Description:**
-    Place the rolling sphere into the shallow bin, but only when the light turns green. The sphere continuously 
+    Catch the rolling sphere into the shallow bin, but only when the light turns green. The sphere continuously 
     rolls on the table, and the light bulb starts OFF and turns GREEN after 50 steps. The robot must wait for 
     the green light before attempting to grasp the sphere, otherwise the task fails.
 
@@ -36,7 +36,7 @@ class PlaceRollingSphereEnv(BaseEnv):
 
     **Success Conditions:**
     - The light bulb shows GREEN light (after 50 steps)
-    - The rolling sphere is placed on the top of the bin
+    - The rolling sphere is caught on the top of the bin
     - The robot remains static and the gripper is not closed at the end state
 
     **Failure Conditions:**
@@ -49,7 +49,6 @@ class PlaceRollingSphereEnv(BaseEnv):
     - Requires patience, timing, and dynamic object tracking
     """
 
-    _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/PlaceRollingSphere-v1_rt.mp4"
     SUPPORTED_ROBOTS = ["panda", "fetch"]
 
     # Specify some supported robot types
@@ -73,8 +72,8 @@ class PlaceRollingSphereEnv(BaseEnv):
     max_rolling_speed = 0.05  # Reduced from 0.25 to make sphere move slowly
     LIGHT_ACTIVATION_STEPS = 25  # Light turns green after 50 steps
 
-    LIGHT_BULB_OFF_PATH = "../../nebula/utils/building/assets/light_bulb/light_bulb_off.glb"
-    LIGHT_BULB_GREEN_PATH = "../../nebula/utils/building/assets/light_bulb/light_bulb_green.glb"
+    LIGHT_BULB_OFF_PATH = "./nebula/utils/building/assets/light_bulb/light_bulb_off.glb"
+    LIGHT_BULB_GREEN_PATH = "./nebula/utils/building/assets/light_bulb/light_bulb_green.glb"
 
     def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, **kwargs):
         self.robot_init_qpos_noise = robot_init_qpos_noise
@@ -185,14 +184,17 @@ class PlaceRollingSphereEnv(BaseEnv):
     def _build_light_bulb(self, glb_file, name):
         """Build a light bulb actor from GLB file"""
         builder = self.scene.create_actor_builder()
-        print(f"Building light bulb: {name}")
+        # print(f"Building light bulb: {name}")
         
         # Add collision to make it stable on table
         builder.add_box_collision(half_size=[0.02, 0.02, 0.03])
         
         # Load GLB file
         builder.add_visual_from_file(filename=glb_file, scale=[0.01, 0.01, 0.01])
-        print(f"Successfully loaded GLB: {glb_file}")
+        # print(f"Successfully loaded GLB: {glb_file}")
+        
+        # Set initial pose to prevent warning
+        builder.initial_pose = sapien.Pose(p=[0.15, 0.0, 0.05])
         
         return builder.build_kinematic(name=name)
 
@@ -231,6 +233,9 @@ class PlaceRollingSphereEnv(BaseEnv):
             builder.add_box_collision(pose, half_size)
             builder.add_box_visual(pose, half_size)
 
+        # Set initial pose to prevent warning
+        builder.initial_pose = sapien.Pose(p=[0, 0, 0])
+        
         # build the kinematic bin
         return builder.build_kinematic(name="bin")
 

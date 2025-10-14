@@ -15,7 +15,7 @@ from nebula.utils.scene_builder.table import TableSceneBuilder
 from nebula.utils.structs.pose import Pose
 
 @register_env("Dynamic-PickCubeWithSliding-Medium", max_episode_steps=300)
-class SlidingPickCubeEnv(BaseEnv):
+class DynamicMediumSlidingPickCubeEnv(BaseEnv):
     """
     **Task Description:**
     A pick and place task on a sloped surface placed on a table where the cube slides 

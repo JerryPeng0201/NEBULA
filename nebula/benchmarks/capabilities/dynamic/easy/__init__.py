@@ -1,3 +1,3 @@
-from .press_switch import PressLightSwitchEnv
-from .pick_cube_color import ColorSwitchPickCubeEnv
-from .pick_cube_shape import ShapeSwitchPickCubeEnv
+from .press_switch import DynamicPressLightSwitchEnv
+from .switch_color import DynamicColorSwitchPickEnv
+from .switch_shape import DynamicShapeSwitchPickEnv

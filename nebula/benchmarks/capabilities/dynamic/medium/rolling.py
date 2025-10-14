@@ -21,7 +21,7 @@ from nebula.utils.structs.types import Array, GPUMemoryConfig, SimConfig
 
 
 @register_env("Dynamic-PlaceRollingSphere-Medium", max_episode_steps=300)  # Increased episode length for rolling challenge
-class PlaceRollingSphereEnv(BaseEnv):
+class DynamicMediumPlaceRollingSphereEnv(BaseEnv):
     """
     **Task Description:**
     Place the rolling sphere into the shallow bin. The sphere continuously rolls on the table, making this
@@ -43,7 +43,6 @@ class PlaceRollingSphereEnv(BaseEnv):
     - Precise placement while managing sphere momentum
     """
 
-    _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/PlaceRollingSphere-v1_rt.mp4"
     SUPPORTED_ROBOTS = ["panda", "fetch"]
 
     # Specify some supported robot types
@@ -196,6 +195,9 @@ class PlaceRollingSphereEnv(BaseEnv):
             builder.add_box_collision(pose, half_size)
             builder.add_box_visual(pose, half_size)
 
+        # Set initial pose to prevent warning
+        builder.initial_pose = sapien.Pose(p=[0, 0, 0])
+        
         # build the kinematic bin
         return builder.build_kinematic(name="bin")
 

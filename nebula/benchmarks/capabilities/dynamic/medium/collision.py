@@ -16,7 +16,7 @@ from nebula.utils.structs.pose import Pose
 
 
 @register_env("Dynamic-PickCubeWithCollision-Medium", max_episode_steps=200)
-class DynamicMediumPickCubeEnv(BaseEnv):
+class DynamicMediumPickCubeWithCollisionEnv(BaseEnv):
     """
     **Task Description:**
     A pick and lift task with single dynamic interference. The robot must pick up a red cube 

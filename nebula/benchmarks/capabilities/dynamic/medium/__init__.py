@@ -1,3 +1,3 @@
-from .place_rolling_sphere import PlaceRollingSphereEnv
-from .pick_cube_coll import DynamicMediumPickCubeEnv
-from .pick_cube_frac import SlidingPickCubeEnv
+from .collision import DynamicMediumPickCubeWithCollisionEnv
+from .slide import DynamicMediumSlidingPickCubeEnv
+from .rolling import DynamicMediumPlaceRollingSphereEnv

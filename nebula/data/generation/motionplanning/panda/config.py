@@ -32,5 +32,16 @@ SOLUTIONS_CONFIG = {
     "Language-Straight-Easy": LanguageStraightEasySolution,
     "Language-Negation-Medium": LanguageNegationMediumSolution,
     "Language-Condition-Hard": LanguageConditionHardSolution,
+
+    # ===== Dynamic SOLUTIONS =====
+    "Dynamic-ColorSwitchPick-Easy": DynamicEasySwitchColorPickSolution,
+    "Dynamic-ShapeSwitchPick-Easy": DynamicEasySwitchShapePickSolution,
+    "Dynamic-PressSwitch-Easy": DynamicEasyPressSwitchSolution,
+    "Dynamic-PickCubeWithCollision-Medium": DynamicMediumCollideSolution,
+    "Dynamic-PickCubeWithSliding-Medium": DynamicMediumSlidingPickCubeSolution,
+    "Dynamic-PlaceRollingSphere-Medium": DynamicMediumPlaceRollingSphereSolution,
+    "Dynamic-DistractorBallPickCube-Hard": DynamicHardDistractorBallPickCubeSolution,
+    "Dynamic-CatchRollingSphere-Hard": DynamicHardCatchRollingSphereSolution,
+    "Dynamic-RollBall-Hard": DynamicHardRollBallSolution,
 }
 

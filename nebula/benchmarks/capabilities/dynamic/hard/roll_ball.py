@@ -86,7 +86,7 @@ class DynamicHardRollBallEnv(BaseEnv):
     @property
     def _default_sensor_configs(self):
         # Base camera configuration
-        base_pose = sapien_utils.look_at(eye=[0.3, 0, 0.2], target=[-0.1, 0, 0])
+        base_pose = sapien_utils.look_at(eye=[0.7, 0, 0.5], target=[-0.1, 0, 0])
         base_camera = CameraConfig(
             "base_camera",
             pose=base_pose,
@@ -110,7 +110,7 @@ class DynamicHardRollBallEnv(BaseEnv):
         )
 
         # Back right camera
-        back_right_pose = sapien_utils.look_at(eye=[-0.3, -0.3, 0.3], target=[0, 0, 0.1])
+        back_right_pose = sapien_utils.look_at(eye=[-1, 1, 0.3], target=[0, 0, 0.1])
         back_right_camera = CameraConfig(
             uid="back_right_camera",
             pose=back_right_pose,
@@ -122,7 +122,7 @@ class DynamicHardRollBallEnv(BaseEnv):
         )
 
         # Back left camera
-        back_left_pose = sapien_utils.look_at(eye=[-0.3, 0.3, 0.3], target=[0, 0, 0.1])
+        back_left_pose = sapien_utils.look_at(eye=[-1, 1, 0.3], target=[0, 0, 0.1])
         back_left_camera = CameraConfig(
             uid="back_left_camera",
             pose=back_left_pose,
@@ -134,7 +134,7 @@ class DynamicHardRollBallEnv(BaseEnv):
         )
 
         # Front right camera
-        front_right_pose = sapien_utils.look_at(eye=[0.5, -0.5, 0.3], target=[0, 0, 0.1])
+        front_right_pose = sapien_utils.look_at(eye=[1, -1, 0.3], target=[0, 0, 0.1])
         front_right_camera = CameraConfig(
             uid="front_right_camera",
             pose=front_right_pose,
@@ -146,7 +146,7 @@ class DynamicHardRollBallEnv(BaseEnv):
         )
 
         # Front left camera
-        front_left_pose = sapien_utils.look_at(eye=[0.5, 0.5, 0.3], target=[0, 0, 0.1])
+        front_left_pose = sapien_utils.look_at(eye=[1, 1, 0.3], target=[0, 0, 0.1])
         front_left_camera = CameraConfig(
             uid="front_left_camera",
             pose=front_left_pose,

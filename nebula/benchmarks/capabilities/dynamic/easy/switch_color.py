@@ -12,8 +12,8 @@ from nebula.utils.registration import register_env
 from nebula.utils.scene_builder.table import TableSceneBuilder
 from nebula.utils.structs.pose import Pose
 
-@register_env("Dynamic-ColorSwitchPickCube-Easy", max_episode_steps=250)
-class ColorSwitchPickCubeEnv(BaseEnv):
+@register_env("Dynamic-ColorSwitchPick-Easy", max_episode_steps=250)
+class DynamicColorSwitchPickEnv(BaseEnv):
     """
     **Task Description:**
     A pick and lift task with dynamic color switching. The robot must pick up the red cube
@@ -259,7 +259,7 @@ class ColorSwitchPickCubeEnv(BaseEnv):
             self.distractor_cube = self.distractor_cube_green
 
     def step(self, action):
-        # Execute standard ManiSkill step
+        # Execute standard NEBULA step
         obs, reward, terminated, truncated, info = super().step(action)
 
         # Update step counter

@@ -16,7 +16,7 @@ from nebula.utils.structs import Pose
 from nebula.utils.structs.types import Array, GPUMemoryConfig, SimConfig
 
 @register_env("Dynamic-PressSwitch-Easy", max_episode_steps=200)
-class PressLightSwitchEnv(BaseEnv):
+class DynamicPressLightSwitchEnv(BaseEnv):
     """
     **Task Description:**
     A time-critical manipulation task where the robot must press a switch to change a red light to green within 3 seconds.
@@ -52,10 +52,10 @@ class PressLightSwitchEnv(BaseEnv):
     SWITCH_PRESS_THRESHOLD = 0.05  # Distance threshold for switch activation
     SWITCH_SIZE = 0.01  # Half-size of switch cube
 
-    LIGHT_BULB_OFF_PATH = "../../nebula/utils/building/assets/light_bulb/light_bulb_off.glb"
-    LIGHT_BULB_RED_PATH = "../../nebula/utils/building/assets/light_bulb/light_bulb_red.glb"
-    LIGHT_BULB_GREEN_PATH = "../../nebula/utils/building/assets/light_bulb/light_bulb_green.glb"
-    BUTTON_PATH = "../../nebula/utils/building/assets/light_bulb/button.glb"
+    LIGHT_BULB_OFF_PATH = "./nebula/utils/building/assets/light_bulb/light_bulb_off.glb"
+    LIGHT_BULB_RED_PATH = "./nebula/utils/building/assets/light_bulb/light_bulb_red.glb"
+    LIGHT_BULB_GREEN_PATH = "./nebula/utils/building/assets/light_bulb/light_bulb_green.glb"
+    BUTTON_PATH = "./nebula/utils/building/assets/light_bulb/button.glb"
 
     def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, **kwargs):
         self.robot_init_qpos_noise = robot_init_qpos_noise
@@ -180,7 +180,9 @@ class PressLightSwitchEnv(BaseEnv):
         
         # Replace cube visual with button GLB file
         builder.add_visual_from_file(filename=self.BUTTON_PATH, scale=[0.05, 0.05, 0.05])
-        print(f"Successfully loaded button GLB: {self.BUTTON_PATH}")
+        
+        # Set initial pose to prevent warning
+        builder.initial_pose = sapien.Pose(p=[0, 0, 0])
         
         return builder.build_kinematic(name="switch")
 

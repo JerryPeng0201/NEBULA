@@ -15,8 +15,8 @@ from nebula.utils.scene_builder.table import TableSceneBuilder
 from nebula.utils.structs.pose import Pose
 
 
-@register_env("Dynamic-ShapeSwitchPickCube-Easy", max_episode_steps=250)
-class ShapeSwitchPickCubeEnv(BaseEnv):
+@register_env("Dynamic-ShapeSwitchPick-Easy", max_episode_steps=250)
+class DynamicShapeSwitchPickEnv(BaseEnv):
     """
     **Task Description:**
     A pick and lift task with dynamic shape switching. The robot must pick up the cube 

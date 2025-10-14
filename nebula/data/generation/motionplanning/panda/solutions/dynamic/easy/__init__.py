@@ -1,0 +1,3 @@
+from .switch_color import DynamicEasySwitchColorPickSolution
+from .switch_shape import DynamicEasySwitchShapePickSolution
+from .press_switch import DynamicEasyPressSwitchSolution
