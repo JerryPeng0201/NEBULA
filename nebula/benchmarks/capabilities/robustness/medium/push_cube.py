@@ -1,11 +1,11 @@
 """
 Code for a minimal environment/task with just a robot being loaded. We recommend copying this template and modifying as you need.
 
-At a high-level, ManiSkill tasks can minimally be defined by how the environment resets, what agents/objects are
+At a high-level, NEBULA tasks can minimally be defined by how the environment resets, what agents/objects are
 loaded, goal parameterization, and success conditions
 
 Environment reset is comprised of running two functions, `self._reconfigure` and `self.initialize_episode`, which is auto
-run by ManiSkill. As a user, you can override a number of functions that affect reconfiguration and episode initialization.
+run by NEBULA. As a user, you can override a number of functions that affect reconfiguration and episode initialization.
 
 Reconfiguration will reset the entire environment scene and allow you to load/swap assets and agents.
 
@@ -48,8 +48,6 @@ class RobustPushCubeMediumEnv(BaseEnv):
     **Success Conditions:**
     - the cube's xy position is within goal_radius (default 0.1) of the target's xy position by euclidean distance and the cube is still on the table.
     """
-
-    _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/PushCube-v1_rt.mp4"
 
     SUPPORTED_ROBOTS = ["panda", "fetch"]
 

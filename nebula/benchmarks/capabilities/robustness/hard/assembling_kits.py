@@ -36,8 +36,6 @@ class RobustHardAssemblingKitsEnv(BaseEnv):
     - the misplaced shape is inserted completely into the correct slot
     """
 
-    _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/AssemblingKits-v1_rt.mp4"
-
     SUPPORTED_REWARD_MODES = ["sparse", "none"]
     SUPPORTED_ROBOTS = ["panda_wristcam"]
     agent: Union[PandaWristCam]
@@ -56,8 +54,8 @@ class RobustHardAssemblingKitsEnv(BaseEnv):
         if not (self._kit_dir.exists() and self._models_dir.exists()):
             raise FileNotFoundError(
                 "The objects/kits are not found."
-                "Please download (ManiSkill) AssemblingKits assets:"
-                "`python -m mani_skill.utils.download_asset assembling_kits`."
+                "Please download (NEBULA) AssemblingKits assets:"
+                "`python -m nebula.utils.download_asset assembling_kits`."
             )
 
         self._episode_json = io_utils.load_json(self.asset_root / "episodes.json")

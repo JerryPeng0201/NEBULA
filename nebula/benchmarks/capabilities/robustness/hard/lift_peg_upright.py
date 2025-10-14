@@ -201,7 +201,7 @@ class RobustHardLiftPegUprightEnv(BaseEnv):
         rot_rew = (rot_vec @ goal_vec).view(-1).abs()
         reward = rot_rew
 
-        # position reward using common maniskill distance reward pattern
+        # position reward using common nebula distance reward pattern
         # giving reward in [0,1] for moving center of mass toward half length above table
         z_dist = torch.abs(self.peg.pose.p[:, 2] - self.peg_half_length)
         reward += 1 - torch.tanh(5 * z_dist)
