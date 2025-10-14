@@ -12,22 +12,23 @@ import torch.optim as optim
 import torch.nn.functional as F
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
-from diffusion_policy.evaluate import evaluate
-from collections import defaultdict
 
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), 'diffusion_policy'))
+
+from evaluate import evaluate
+from collections import defaultdict
 import yaml
 
 from torch.utils.data.dataset import Dataset
 from torch.utils.data.sampler import RandomSampler, BatchSampler
 from torch.utils.data.dataloader import DataLoader
-from diffusion_policy.utils import IterationBasedBatchSampler, worker_init_fn
-from diffusion_policy.make_env import make_eval_envs
-from diffusers.schedulers.scheduling_ddpm import DDPMScheduler
-from diffusers.training_utils import EMAModel
-from diffusers.optimization import get_scheduler
-from diffusion_policy.conditional_unet1d import ConditionalUnet1D
+from diffusion_policy.diffusion_policy.utils import IterationBasedBatchSampler, worker_init_fn
+from diffusion_policy.diffusion_policy.make_env import make_eval_envs
+from diffusion_policy.diffusers.schedulers.scheduling_ddpm import DDPMScheduler
+from diffusion_policy.diffusers.training_utils import EMAModel
+from diffusion_policy.diffusers.optimization import get_scheduler
+from diffusion_policy.diffusion_policy.conditional_unet1d import ConditionalUnet1D
 from dataclasses import dataclass, field
 from typing import Optional, List
 import tyro
@@ -68,7 +69,7 @@ class Args:
         "Control-PlaceSphere-Easy", "Control-PushCube-Easy", "Control-StackCube-Easy", 
         "Control-PegInsertionSide-Medium", "Control-PlaceSphere-Medium", "Control-StackCube-Medium", 
         "Control-PlaceSphere-Hard", "Control-StackCube-Hard", 
-        "Perception-PlaceBiggerSphere-Easy", "Perception-PlaceRedSphere-Easy", "Perception-PlaceSphere-Easy", 
+        "Perception-PickBiggerSphere-Easy", "Perception-PickRedSphere-Easy", "Perception-PlaceSphere-Easy", 
         "Perception-PlaceDiffCubes-Medium", "Perception-PlaceRedT-Medium", "Perception-PlaceWhitePeg-Medium", 
         "Perception-PlacePeg-Hard", "Perception-PlaceRedT-Hard", "Perception-PlaceRightCubes-Hard", 
         "DynamicEasy-PressSwitch", "DynamicMedium-PickSlidingCube", "DynamicHard-ColorSwitchPickCube", "DynamicHard-ShapeSwitchPickCube",

@@ -108,6 +108,30 @@ def get_cpu_memory_usage():
         'percent': process.memory_percent()
     }
 
+def count_parameters(model):
+    """Count the total number of parameters in a model."""
+    if hasattr(model, 'model') and hasattr(model.model, 'parameters'):
+        total_params = sum(p.numel() for p in model.model.parameters())
+        trainable_params = sum(p.numel() for p in model.model.parameters() if p.requires_grad)
+    elif hasattr(model, 'parameters'):
+        total_params = sum(p.numel() for p in model.parameters())
+        trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    else:
+        # Try to access nested models like transformers, diffusion networks
+        total_params = 0
+        trainable_params = 0
+        for attr_name in dir(model):
+            attr = getattr(model, attr_name)
+            if hasattr(attr, 'parameters'):
+                total_params += sum(p.numel() for p in attr.parameters())
+                trainable_params += sum(p.numel() for p in attr.parameters() if p.requires_grad)
+    
+    return {
+        'total': total_params,
+        'trainable': trainable_params,
+        'non_trainable': total_params - trainable_params
+    }
+
 def calculate_stability_score(action_history):
     """Calculate action smoothness based on variation between consecutive actions."""
     if len(action_history) < 2:
@@ -189,6 +213,11 @@ def run_episode(env, policy, env_id, config, episode_idx, save_video=False, vide
     global_steps = 0
     task_description_record = ""
     done = False
+    episode_gpu_memory_peak = 0
+    episode_cpu_memory_peak = 0
+
+    if torch.cuda.is_available():
+        torch.cuda.reset_peak_memory_stats()
     
     if hasattr(env, 'evaluate'):
         info = env.evaluate()
@@ -219,6 +248,15 @@ def run_episode(env, policy, env_id, config, episode_idx, save_video=False, vide
         dp_action = policy.predict_action(current_obs)
         inference_time = time.perf_counter() - start_time
         episode_inference_times.append(inference_time)
+
+        # Monitor memory after inference
+        post_gpu = get_gpu_memory_usage()
+        post_cpu = get_cpu_memory_usage()
+
+        if post_gpu:
+            episode_gpu_memory_peak = max(episode_gpu_memory_peak, post_gpu['allocated'])
+        if post_cpu:
+            episode_cpu_memory_peak = max(episode_cpu_memory_peak, post_cpu['rss'])
         
         # Convert to Nebula actions
         nebula_actions = dp_to_nebula_action(dp_action, action_min, action_max)
@@ -255,7 +293,9 @@ def run_episode(env, policy, env_id, config, episode_idx, save_video=False, vide
         'success': info.get('success', False),
         'steps': global_steps,
         'avg_inference_time': float(np.mean(episode_inference_times)),
-        'stability_score': calculate_stability_score(action_history)
+        'stability_score': calculate_stability_score(action_history),
+        'gpu_memory_peak': episode_gpu_memory_peak,
+        'cpu_memory_peak': episode_cpu_memory_peak,
     }
 
 def evaluate_task(env_id, policy, config):
@@ -299,6 +339,8 @@ def evaluate_task(env_id, policy, config):
         'avg_inference_frequency_hz': float(1.0 / np.mean(inference_times)),
         'avg_latency_ms': float(np.mean(inference_times) * 1000),
         'avg_stability_score': float(np.mean(stability_scores)),
+        'avg_gpu_memory_peak_mb': float(np.mean([r['gpu_memory_peak'] for r in results])),
+        'avg_cpu_memory_peak_mb': float(np.mean([r['cpu_memory_peak'] for r in results])),
         'num_trajectories': config['experiment']['num_traj'],
         'episodes': results
     }
@@ -345,6 +387,8 @@ def generate_conclusion(config, test_type):
     all_inference_freqs = []
     all_latencies = []
     all_stabilities = []
+    all_gpu_peaks = []
+    all_cpu_peaks = []
     
     category_results = {}
     difficulty_results = {'Easy': [], 'Medium': [], 'Hard': []}
@@ -357,6 +401,8 @@ def generate_conclusion(config, test_type):
         all_inference_freqs.append(task_result['avg_inference_frequency_hz'])
         all_latencies.append(task_result['avg_latency_ms'])
         all_stabilities.append(task_result['avg_stability_score'])
+        all_gpu_peaks.append(task_result['gpu_memory_peak'])
+        all_cpu_peaks.append(task_result['cpu_memory_peak'])
         
         parts = task_name.split('-')
         if len(parts) >= 2:
@@ -371,12 +417,15 @@ def generate_conclusion(config, test_type):
                 difficulty_results[difficulty].append(success_rate)
     
     summary['overall_metrics'] = {
+        'model_size': f"{data['model_size']}",
         'average_success_rate': float(np.mean(all_success_rates)),
         'average_inference_frequency_hz': float(np.mean(all_inference_freqs)),
         'average_latency_ms': float(np.mean(all_latencies)),
         'average_stability_score': float(np.mean(all_stabilities)),
         'total_tasks': len(data['results']),
-        'successful_tasks': sum(1 for sr in all_success_rates if sr > 50)
+        'successful_tasks': sum(1 for sr in all_success_rates if sr > 50),
+        'average_gpu_memory_peak': float(np.mean(all_gpu_peaks)),
+        'average_cpu_memory_peak': float(np.mean(all_cpu_peaks)),
     }
     
     for category, rates in category_results.items():
@@ -402,8 +451,11 @@ def generate_conclusion(config, test_type):
     print(f"Overall Success Rate: {summary['overall_metrics']['average_success_rate']:.2f}%")
     print(f"Average Inference Frequency: {summary['overall_metrics']['average_inference_frequency_hz']:.2f} Hz")
     print(f"Average Latency: {summary['overall_metrics']['average_latency_ms']:.2f} ms")
+    print(f"Average Stability Score: {summary['overall_metrics']['average_stability_score']:.4f}")
+    print(f"Average GPU Memory Peak: {summary['overall_metrics']['average_gpu_memory_peak']:.2f} MB")
+    print(f"Average CPU Memory Peak: {summary['overall_metrics']['average_cpu_memory_peak']:.2f} MB")
 
-def save_task_result(task_result, config, is_first_task=False, test_type='all'):
+def save_task_result(task_result, config, param_info, is_first_task=False, test_type='all'):
     """Save task result to JSON file."""
     output_dir = Path(config['experiment']['save_dir'])
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -420,6 +472,7 @@ def save_task_result(task_result, config, is_first_task=False, test_type='all'):
             'session_id': session_id,
             'timestamp': datetime.now().isoformat(),
             'config': serializable_config,
+            'model_size': f"{param_info['total'] * 4 / 1024**2:.1f} MB (assuming float32)",
             'results': []
         }
     
@@ -443,17 +496,6 @@ def main():
     
     config['session_id'] = datetime.now().strftime('%Y%m%d_%H%M%S')
     
-    # Print system information
-    print("="*60)
-    print("SYSTEM INFORMATION")
-    print("="*60)
-    print(f"PyTorch version: {torch.__version__}")
-    print(f"CUDA available: {torch.cuda.is_available()}")
-    if torch.cuda.is_available():
-        print(f"CUDA version: {torch.version.cuda}")
-        print(f"GPU device: {torch.cuda.get_device_name()}")
-        print(f"GPU memory: {torch.cuda.get_device_properties(0).total_memory / 1024**3:.1f} GB")
-    
     # Set random seeds
     seed = config['experiment']['random_seed']
     import random
@@ -466,7 +508,8 @@ def main():
     torch.backends.cudnn.benchmark = False
     
     policy = create_diffusion_policy(config)
-    
+    param_info = count_parameters(policy)
+
     if args.tasks:
         tasks = args.tasks
     else:
@@ -476,15 +519,9 @@ def main():
         if args.test_type in ['stress', 'all']:
             tasks.extend(config['tasks']['stress'])
     
-    print(f"\n{'='*60}")
-    print("STARTING EVALUATION")
-    print(f"{'='*60}")
-    print(f"Total tasks: {len(tasks)}")
-    print(f"Episodes per task: {config['experiment']['num_traj']}")
-    
     for idx, task in enumerate(tqdm(tasks, desc="Overall Progress")):
         result = evaluate_task(task, policy, config)
-        save_task_result(result, config, is_first_task=(idx == 0), test_type=args.test_type)
+        save_task_result(result, config, param_info, is_first_task=(idx == 0), test_type=args.test_type)
     
     generate_conclusion(config, args.test_type)
 

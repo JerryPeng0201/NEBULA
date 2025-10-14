@@ -15,6 +15,7 @@ from pathlib import Path
 from datetime import datetime
 from tqdm import tqdm
 import imageio
+import psutil
 
 from gr00t.experiment.data_config import load_data_config
 from gr00t.model.policy import Gr00tPolicy
@@ -70,6 +71,53 @@ TASK_DESCRIPTIONS = {
     # adaptation tasks
     "AdaptationTest-MovingCube": "Pick up the cube",
 }
+
+def get_gpu_memory_usage():
+    """Get current GPU memory usage in MB."""
+    if torch.cuda.is_available():
+        gpu_memory = torch.cuda.memory_allocated() / 1024**2
+        gpu_memory_max = torch.cuda.max_memory_allocated() / 1024**2
+        gpu_memory_reserved = torch.cuda.memory_reserved() / 1024**2
+        return {
+            'allocated': gpu_memory,
+            'max_allocated': gpu_memory_max,
+            'reserved': gpu_memory_reserved
+        }
+    return None
+
+def get_cpu_memory_usage():
+    """Get current CPU memory usage in MB."""
+    process = psutil.Process(os.getpid())
+    memory_info = process.memory_info()
+    return {
+        'rss': memory_info.rss / 1024**2,
+        'vms': memory_info.vms / 1024**2,
+        'percent': process.memory_percent()
+    }
+
+def count_parameters(model):
+    """Count the total number of parameters in a model."""
+    if hasattr(model, 'model') and hasattr(model.model, 'parameters'):
+        total_params = sum(p.numel() for p in model.model.parameters())
+        trainable_params = sum(p.numel() for p in model.model.parameters() if p.requires_grad)
+    elif hasattr(model, 'parameters'):
+        total_params = sum(p.numel() for p in model.parameters())
+        trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    else:
+        # Try to access nested models like transformers, diffusion networks
+        total_params = 0
+        trainable_params = 0
+        for attr_name in dir(model):
+            attr = getattr(model, attr_name)
+            if hasattr(attr, 'parameters'):
+                total_params += sum(p.numel() for p in attr.parameters())
+                trainable_params += sum(p.numel() for p in attr.parameters() if p.requires_grad)
+    
+    return {
+        'total': total_params,
+        'trainable': trainable_params,
+        'non_trainable': total_params - trainable_params
+    }
 
 def calculate_stability_score(action_history):
     if len(action_history) < 2:

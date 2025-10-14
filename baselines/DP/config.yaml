@@ -3,7 +3,7 @@ experiment:
   dataset_root: "/home/yanyan/mnt_yanyan_hpc_nebula_alpha"
   save_dir: "/HDD1/embodied_ai/open_source_test/diffusion_policy/dp_json_results"
   random_seed: 0
-  num_traj: 25
+  num_traj: 1
   max_episode_steps: 400
   base_seed: 20241201
 
@@ -41,8 +41,8 @@ tasks:
     - "Control-PlaceSphere-Hard"
     - "Control-PlugCharger-Hard"
     - "Control-StackCube-Hard"
-    - "Perception-PlaceBiggerSphere-Easy"
-    - "Perception-PlaceRedSphere-Easy"
+    - "Perception-PickBiggerSphere-Easy"
+    - "Perception-PickRedSphere-Easy"
     - "Perception-PickSphere-Easy"
     - "Perception-PlaceRedT-Medium"
     - "Perception-PlaceDiffCubes-Medium"
