@@ -21,18 +21,14 @@ def solve(env: SpatialEasyMoveCubeEnv, seed=None, debug=False, vis=False):
     FINGER_LENGTH = 0.025
     env = env.unwrapped
 
-    # Get the cube objects (updated names)
+    # Get the cube objects
     red_cube = env.red_cube    # Red cube that needs to be moved
     green_cube = env.green_cube  # Green cube as spatial reference (at center)
 
     # Get the target direction
     target_direction = env.target_direction
-    
-    # print(f"Task: Move red cube to the {target_direction} of green cube")
-    #print(f"Target direction: {target_direction}")
 
     # Pre-compute grasp pose to avoid mid-execution computation
-    # print("Pre-computing grasp poses...")
     obb_red = get_actor_obb(red_cube)
     approaching = np.array([0, 0, -1])  # Approach from above
     target_closing = env.agent.tcp.pose.to_transformation_matrix()[0, :3, 1].cpu().numpy()
