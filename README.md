@@ -54,7 +54,7 @@ Access key components of the NEBULA ecosystem below:
   See how human demonstrations are collected via teleoperation to capture natural, adaptive behaviors in dynamic and complex scenes.
 
 - 🎯 **[Baseline Adapter](./baselines/README.md)** 
-Access pre-configured baseline models with standardized training / fine-tuning, evaluation, and visualization scripts.
+  Access pre-configured baseline models with standardized training / fine-tuning, evaluation, and visualization scripts.
 
 ## 📦 Installation
 
