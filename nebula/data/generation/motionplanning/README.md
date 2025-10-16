@@ -1,7 +1,7 @@
 # Running Nebula Motion Planning (Simulation)
 
 ## Overview: Motion Planning in Nebula
-
+![MP_banner](/figures/MP_banner.png)
 Motion planning is a traditional control and data collection method in robotics, using algorithmic planners to generate feasible trajectories for robot manipulation. 
 
 For the current implementation with the Panda robot, Nebula provides complete solutions for motion planning data collection across all Nebula benchmark tasks.  

@@ -4,7 +4,7 @@
 
 ![teleop_banner](/figures/teleop_banner.png)
 
-Nebula teleoperation provides an intuitive click-and-drag interface, powered by the Sapien engine, for efficient data collection. The system leverages **gRPC** to expose the Ubuntu-exclusive **mplib** motion planner as a remote service. By running mplib inside a Docker container on Ubuntu, users can connect and interact with the planner from their local machine (macOS or Ubuntu) via gRPC, enabling cross-platform teleoperation.
+Nebula teleoperation provides an intuitive click-and-drag interface, powered by the Sapien engine, for efficient data collection. The system leverages **gRPC** to expose the Ubuntu-exclusive **mplib** motion planner as a remote service. By running mplib inside a Ubuntu Docker container, users can connect and interact with the planner from their local machine (macOS or Ubuntu) via gRPC, enabling cross-platform teleoperation.
 
 **Key Features:**
 
