@@ -104,14 +104,14 @@ def main(args: Args):
         del env
     else:
         
-        h5_file_path = os.path.join(output_dir,f"{args.subtask_idx}/trajectory.h5")
+        h5_file_path = os.path.join(output_dir,f"{args.subtask_idx}/trajectory_tmp.h5")
         json_file_path = os.path.join(output_dir,f"{args.subtask_idx}/metadata.json")
         if not os.path.exists(h5_file_path):
             raise FileNotFoundError(f"File {h5_file_path} does not exist. Please collect trajectories first.")
         if not os.path.exists(json_file_path):
             raise FileNotFoundError(f"File {json_file_path} does not exist. Please collect trajectories first.")
     
-    print(f"Trajectories saved to {h5_file_path}")
+    print(f"Tmp Trajectories saved to {h5_file_path}")
     if args.save_video:
         print(f"Saving videos to {output_dir}")
 
@@ -126,6 +126,7 @@ def main(args: Args):
             render_mode="sensors",
             reward_mode="none",
             human_render_camera_configs=dict(shader_pack=args.video_saving_shader),
+            sensor_configs=dict(shader_pack=args.video_saving_shader),
         )
         env = RecordEpisode(
                 env_gym,
