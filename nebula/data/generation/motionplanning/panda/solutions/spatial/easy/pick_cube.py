@@ -53,16 +53,7 @@ def SpatialEasyPickCubeSolution(env: SpatialEasyPickCubeEnv, seed=None, debug=Fa
     # Lift
     # -------------------------------------------------------------------------- #
     lift_pose = grasp_pose * sapien.Pose([0, 0, -0.05])
-    planner.move_to_pose_with_screw(lift_pose)
-    
-    # -------------------------------------------------------------------------- #
-    # Place in target position
-    # -------------------------------------------------------------------------- #
-    target = env.cubes['blue']
-    reach_position = target.pose.sp.p.copy()
-    reach_pose = sapien.Pose(reach_position, grasp_pose.q)
-    planner.move_to_pose_with_screw(reach_pose)
-    res = planner.open_gripper()
+    res = planner.move_to_pose_with_screw(lift_pose)
     
     planner.close()
     return res

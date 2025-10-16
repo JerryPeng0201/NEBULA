@@ -68,20 +68,19 @@ def SpatialEasyMoveCubeSolution(env: SpatialEasyMoveCubeEnv, seed=None, debug=Fa
     green_cube_pos = green_cube.pose.p[0].cpu().numpy()
     
     # Calculate target placement position based on spatial direction
-    # Use environment's offset distance (0.06m = 6cm)
-    placement_distance = env.target_offset_distance  # 0.06
+    placement_distance = env.target_offset_distance
     
     # Define spatial offset vectors relative to green cube (match environment logic)
     target_position = green_cube_pos.copy()
     
     if target_direction == "right":
-        target_position[0] += placement_distance  # +x direction
+        target_position[1] -= placement_distance 
     elif target_direction == "left":
-        target_position[0] -= placement_distance  # -x direction
+        target_position[1] += placement_distance
     elif target_direction == "front":
-        target_position[1] -= placement_distance  # -y direction (front)
+        target_position[0] += placement_distance
     elif target_direction == "back":
-        target_position[1] += placement_distance  # +y direction (back)
+        target_position[0] -= placement_distance
     else:
         print(f"Invalid target direction: {target_direction}")
         planner.close()
@@ -94,7 +93,7 @@ def SpatialEasyMoveCubeSolution(env: SpatialEasyMoveCubeEnv, seed=None, debug=Fa
     # Move to approach position above target location
     # -------------------------------------------------------------------------- #
     approach_position = target_position.copy()
-    approach_position[2] += 0.05  # 5cm above target position for safety
+    approach_position[2] += 0.05
     
     approach_pose = sapien.Pose(approach_position, red_grasp_pose.q)
     planner.move_to_pose_with_screw(approach_pose)

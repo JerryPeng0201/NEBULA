@@ -35,14 +35,15 @@ class SpatialEasyMoveCubeEnv(BaseEnv):
 
     SUPPORTED_ROBOTS = ["panda", "fetch"]
     agent: Union[Panda, Fetch]
+    task_instruction = ""
 
     def __init__(
-        self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, 
+        self, *args, robot_uids="panda", robot_init_qpos_noise=0, 
         target_direction="right", **kwargs
     ):
         self.robot_init_qpos_noise = robot_init_qpos_noise
         self.target_direction = target_direction  # "left", "right", "front", "back"
-        self.target_offset_distance = 0.06  # 6cm away from green cube
+        self.target_offset_distance = 0.08  # 6cm away from green cube
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
 
     @property
@@ -163,6 +164,8 @@ class SpatialEasyMoveCubeEnv(BaseEnv):
             if "target_direction" in options:
                 self.target_direction = options["target_direction"]
 
+            self.task_instruction = f"Pick up the red cube and place it to the near {self.target_direction} of the green cube."
+
             xyz = torch.zeros((b, 3))
             xyz[:, 2] = 0.02  # on table surface
 
@@ -170,39 +173,33 @@ class SpatialEasyMoveCubeEnv(BaseEnv):
             green_xyz = xyz.clone()
             green_xyz[:, 0] = 0.0  # center x
             green_xyz[:, 1] = 0.0  # center y
-            green_qs = randomization.random_quaternions(
-                b, lock_x=True, lock_y=True, lock_z=False, device=self.device
-            )
-            self.green_cube.set_pose(Pose.create_from_pq(p=green_xyz, q=green_qs))
+            self.green_cube.set_pose(Pose.create_from_pq(p=green_xyz))
 
             # Place red cube at random position (avoid collision with green cube)
-            red_xy = torch.rand((b, 2), device=self.device) * 0.3 - 0.15  # [-0.15, 0.15] range
+            red_xy = torch.rand((b, 2), device=self.device) * 0.8 - 0.4
             # Ensure red cube is not too close to green cube initially
             distance_to_center = torch.linalg.norm(red_xy, axis=1)
-            too_close_mask = distance_to_center < 0.08
+            too_close_mask = distance_to_center < 0.15
             while too_close_mask.any():
-                red_xy[too_close_mask] = torch.rand((too_close_mask.sum(), 2), device=self.device) * 0.3 - 0.15
+                red_xy[too_close_mask] = torch.rand((too_close_mask.sum(), 2), device=self.device) * 0.8 - 0.4
                 distance_to_center[too_close_mask] = torch.linalg.norm(red_xy[too_close_mask], axis=1)
-                too_close_mask = distance_to_center < 0.08
+                too_close_mask = distance_to_center < 0.15
 
             xyz[:, :2] = red_xy
-            red_qs = randomization.random_quaternions(
-                b, lock_x=True, lock_y=True, lock_z=False, device=self.device
-            )
-            self.red_cube.set_pose(Pose.create_from_pq(p=xyz, q=red_qs))
+            self.red_cube.set_pose(Pose.create_from_pq(p=xyz))
 
     def _get_target_position(self, green_pos):
         """Calculate target position based on direction relative to green cube"""
         target_pos = green_pos.clone()
         
         if self.target_direction == "right":
-            target_pos[:, 0] += self.target_offset_distance  # +x direction
+            target_pos[:, 1] -= self.target_offset_distance 
         elif self.target_direction == "left":
-            target_pos[:, 0] -= self.target_offset_distance  # -x direction
+            target_pos[:, 1] += self.target_offset_distance 
         elif self.target_direction == "front":
-            target_pos[:, 1] -= self.target_offset_distance  # -y direction (front)
+            target_pos[:, 0] += self.target_offset_distance
         elif self.target_direction == "back":
-            target_pos[:, 1] += self.target_offset_distance  # +y direction (back)
+            target_pos[:, 0] -= self.target_offset_distance
         else:
             raise ValueError(f"Invalid target direction: {self.target_direction}")
         
@@ -255,10 +252,10 @@ class SpatialEasyMoveCubeEnv(BaseEnv):
         result = torch.zeros(red_pos.shape[0], dtype=torch.long, device=red_pos.device)
         
         # 0: left, 1: right, 2: front, 3: back
-        result[x_dominant & (offset[:, 0] > 0)] = 1  # right
-        result[x_dominant & (offset[:, 0] < 0)] = 0  # left
-        result[~x_dominant & (offset[:, 1] > 0)] = 3  # back
-        result[~x_dominant & (offset[:, 1] < 0)] = 2  # front
+        result[x_dominant & (offset[:, 1] < 0)] = 1  # right
+        result[x_dominant & (offset[:, 1] > 0)] = 0  # left
+        result[~x_dominant & (offset[:, 0] < 0)] = 3  # back
+        result[~x_dominant & (offset[:, 0] > 0)] = 2  # front
         
         return result
 
@@ -338,4 +335,4 @@ class SpatialEasyMoveCubeEnv(BaseEnv):
         self.target_direction = direction
 
     def get_task_instruction(self):
-        return f"Pick up the red cube and place it to the {self.target_direction} of the green cube."
+        return self.task_instruction

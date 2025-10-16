@@ -43,7 +43,7 @@ class SpatialMediumPickCubeEnv(BaseEnv):
     cube_half_size = 0.02
     platform_half_size = 0.1 
     lift_thresh = 0.05
-    task_instruction = "Pick the target object based on spatial relation" # update later
+    task_instruction = "Pick the target object based on spatial relation"
     
     def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, **kwargs):
         self.robot_init_qpos_noise = robot_init_qpos_noise
@@ -284,13 +284,6 @@ class SpatialMediumPickCubeEnv(BaseEnv):
                     obj_xyz[:, :2] = torch.tensor(pos) + (torch.rand((b, 2)) * 2 - 1) * 0.02
                     obj_xyz[:, 2] = self.cube_half_size
                     self.objects[color].set_pose(Pose.create_from_pq(obj_xyz))
-            
-            # Let physics settle before proceeding
-            for _ in range(15):  # Longer settling time for complex objects
-                self.scene.step()
-                # Ensure container stays stable
-                self.container.set_linear_velocity(torch.zeros((b, 3)))
-                self.container.set_angular_velocity(torch.zeros((b, 3)))
 
     def _get_container_base_height(self):
         """Get the appropriate base height for different container types"""
