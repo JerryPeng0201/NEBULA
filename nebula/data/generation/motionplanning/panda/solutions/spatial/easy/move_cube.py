@@ -1,13 +1,11 @@
 import numpy as np
 import sapien
 from transforms3d.euler import euler2quat
-import random
-from nebula.envs.tasks.capabilities.spatial.easy.move_cube import SpatialEasyMoveCubeEnv
-from nebula.data_collection.motionplanning.panda.motionplanner import PandaArmMotionPlanningSolver
-from nebula.data_collection.motionplanning.panda.utils import (
-    compute_grasp_info_by_obb, get_actor_obb)
+from nebula.benchmarks.capabilities.spatial.easy.move_cube import SpatialEasyMoveCubeEnv
+from nebula.data.generation.motionplanning.panda.motionplanner import PandaArmMotionPlanningSolver
+from nebula.data.generation.motionplanning.panda.utils import compute_grasp_info_by_obb, get_actor_obb
 
-def solve(env: SpatialEasyMoveCubeEnv, seed=None, debug=False, vis=False):
+def SpatialEasyMoveCubeSolution(env: SpatialEasyMoveCubeEnv, seed=None, debug=False, vis=False):
     env.reset(seed=seed)
     planner = PandaArmMotionPlanningSolver(
         env,
@@ -45,26 +43,27 @@ def solve(env: SpatialEasyMoveCubeEnv, seed=None, debug=False, vis=False):
     red_cube_pos = red_cube.pose.p[0].cpu().numpy()
     red_grasp_pose = env.agent.build_grasp_pose(approaching, closing, red_cube_pos)
 
-    # ========================================================================== #
-    # Phase 1: Reach and grasp the red cube
-    # ========================================================================== #
-    
-    # Reach red cube
+    # -------------------------------------------------------------------------- #
+    # Reach
+    # -------------------------------------------------------------------------- #
     reach_pose_red = red_grasp_pose * sapien.Pose([0, 0, -0.05])
     planner.move_to_pose_with_screw(reach_pose_red)
     
-    # Grasp red cube
+    # -------------------------------------------------------------------------- #
+    # Grasp
+    # -------------------------------------------------------------------------- #
     planner.move_to_pose_with_screw(red_grasp_pose)
     planner.close_gripper()
 
-    # Lift red cube
+    # -------------------------------------------------------------------------- #
+    # Lift
+    # -------------------------------------------------------------------------- #
     lift_pose = sapien.Pose([0, 0, 0.08]) * red_grasp_pose
     planner.move_to_pose_with_screw(lift_pose)
 
-    # ========================================================================== #
-    # Phase 2: Calculate target position and move to spatial location
-    # ========================================================================== #
-    
+    # -------------------------------------------------------------------------- #
+    # Calculate target position
+    # -------------------------------------------------------------------------- #
     # Get current green cube position (reference cube) - fix tensor indexing
     green_cube_pos = green_cube.pose.p[0].cpu().numpy()
     
@@ -91,32 +90,21 @@ def solve(env: SpatialEasyMoveCubeEnv, seed=None, debug=False, vis=False):
     # Keep same height as green cube (on table surface)
     target_position[2] = green_cube_pos[2]  # Same z-level as green cube
     
-    # print(f"Green cube position: {green_cube_pos}")
-    # print(f"Target position ({target_direction}): {target_position}")
-    # print(f"Offset distance: {placement_distance}m")
-
-    # ========================================================================== #
-    # Phase 3: Transport to target area
-    # ========================================================================== #
-    
+    # -------------------------------------------------------------------------- #
     # Move to approach position above target location
+    # -------------------------------------------------------------------------- #
     approach_position = target_position.copy()
     approach_position[2] += 0.05  # 5cm above target position for safety
     
     approach_pose = sapien.Pose(approach_position, red_grasp_pose.q)
     planner.move_to_pose_with_screw(approach_pose)
 
-    # ========================================================================== #
-    # Phase 4: Lower and place the red cube
-    # ========================================================================== #
-    
-    # Lower to final placement position
+    # -------------------------------------------------------------------------- #
+    # Place
+    # -------------------------------------------------------------------------- #
     place_pose = sapien.Pose(target_position, red_grasp_pose.q)
-    res = planner.move_to_pose_with_screw(place_pose)
-
-    # Place the red cube
-    planner.open_gripper()
-
+    planner.move_to_pose_with_screw(place_pose)
+    res = planner.open_gripper()
 
     planner.close()
     return res

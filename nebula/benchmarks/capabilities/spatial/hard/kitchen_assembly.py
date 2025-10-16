@@ -14,23 +14,23 @@ from nebula.utils.registration import register_env
 from nebula.utils.scene_builder.table import TableSceneBuilder
 from nebula.utils.structs.pose import Pose
 
-SPATIAL_KITCHEN_ASSEMBLY_DOC_STRING = """Task Description:
-Perform complex 3D spatial assembly tasks in a kitchen environment.
-The robot must manipulate kitchen objects (containers, utensils, and food) placed randomly on a table
-and follow spatial instructions to arrange them properly.
-
-Task Components:
-- Multiple YCB kitchen objects randomly placed on table
-- Simple multi-step spatial instructions
-- Basic spatial relationships (inside, beside, on shelf)
-
-Success Conditions:
-- Follow spatial instruction correctly
-- Stable object placement
-"""
-
 @register_env("Spatial-KitchenAssembly-Hard", max_episode_steps=150)
 class SpatialHardKitchenAssemblyEnv(BaseEnv):
+    """Task Description:
+    Perform complex 3D spatial assembly tasks in a kitchen environment.
+    The robot must manipulate kitchen objects (containers, utensils, and food) placed randomly on a table
+    and follow spatial instructions to arrange them properly.
+
+    Task Components:
+    - Multiple YCB kitchen objects randomly placed on table
+    - Simple multi-step spatial instructions
+    - Basic spatial relationships (inside, beside, on shelf)
+
+    Success Conditions:
+    - Follow spatial instruction correctly
+    - Stable object placement
+    """
+
     SUPPORTED_ROBOTS = ["panda", "fetch"]
     agent: Union[Panda, Fetch]
 
@@ -487,5 +487,3 @@ class SpatialHardKitchenAssemblyEnv(BaseEnv):
     
     def get_task_instruction(self):
         return self.task_instruction
-
-SpatialHardKitchenAssemblyEnv.__doc__ = SPATIAL_KITCHEN_ASSEMBLY_DOC_STRING

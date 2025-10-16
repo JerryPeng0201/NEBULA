@@ -15,36 +15,35 @@ from nebula.utils.registration import register_env
 from nebula.utils.scene_builder.table import TableSceneBuilder
 from nebula.utils.structs.pose import Pose
 
-SPATIAL_HARD_DOC_STRING = """Task Description:
-Perform complex multi-step spatial reasoning with nested spatial relationships. 
-The robot must understand complex relations such as:
-- "Pick the green cube that is on top of the object inside the red container"
-- "Pick the blue cube that is beside the object under the platform"
-- "Pick the object that is behind the stacked items"
-
-This requires:
-1. Multi-step spatial reasoning (container -> inside object -> on top object)
-2. Understanding complex spatial hierarchies and relationships
-3. Identifying target objects through nested spatial descriptions
-
-Spatial Relations:
-- Nested relationships: "on_top_of_inside", "beside_under_platform", "behind_stacked_items"
-- Multiple reference objects creating complex spatial scenes
-- Clear spatial hierarchies with unambiguous arrangements
-
-Randomizations:
-- Complex nested object arrangements with 2-3 levels of spatial hierarchy
-- Multiple containers and platforms in different configurations  
-- Random spatial relationship selection for each episode
-
-Success Conditions:
-- Successfully identify and pick the correct target object through multi-step reasoning
-- Object is grasped and lifted above minimum threshold
-- Robot maintains stability throughout the task
-"""
-
 @register_env("Spatial-PickCube-Hard", max_episode_steps=150)
 class SpatialHardPickCubeEnv(BaseEnv):
+    """Task Description:
+    Perform complex multi-step spatial reasoning with nested spatial relationships. 
+    The robot must understand complex relations such as:
+    - "Pick the green cube that is on top of the object inside the red container"
+    - "Pick the blue cube that is beside the object under the platform"
+    - "Pick the object that is behind the stacked items"
+
+    This requires:
+    1. Multi-step spatial reasoning (container -> inside object -> on top object)
+    2. Understanding complex spatial hierarchies and relationships
+    3. Identifying target objects through nested spatial descriptions
+
+    Spatial Relations:
+    - Nested relationships: "on_top_of_inside", "beside_under_platform", "behind_stacked_items"
+    - Multiple reference objects creating complex spatial scenes
+    - Clear spatial hierarchies with unambiguous arrangements
+
+    Randomizations:
+    - Complex nested object arrangements with 2-3 levels of spatial hierarchy
+    - Multiple containers and platforms in different configurations  
+    - Random spatial relationship selection for each episode
+
+    Success Conditions:
+    - Successfully identify and pick the correct target object through multi-step reasoning
+    - Object is grasped and lifted above minimum threshold
+    - Robot maintains stability throughout the task
+    """
     
     SUPPORTED_ROBOTS = ["panda", "fetch"]
     agent: Union[Panda, Fetch]
@@ -248,10 +247,6 @@ class SpatialHardPickCubeEnv(BaseEnv):
             self.target_object_color = random.choice(available_colors)
             self.intermediate_object_color = random.choice([k for k in available_colors 
                                                           if k != self.target_object_color])
-            
-            print(f"Hard Task - Container: {self.current_container_type}")
-            print(f"Relation: {self.current_complex_relation}")
-            print(f"Target: {self.target_object_color}, Intermediate: {self.intermediate_object_color}")
             
             # Position container and platform
             self._position_container_and_platform(b)
@@ -760,5 +755,3 @@ class SpatialHardPickCubeEnv(BaseEnv):
     
     def get_task_instruction(self):
         return self._generate_task_instruction()
-
-SpatialHardPickCubeEnv.__doc__ = SPATIAL_HARD_DOC_STRING

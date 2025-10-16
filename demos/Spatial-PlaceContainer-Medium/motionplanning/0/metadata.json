@@ -1,0 +1,151 @@
+{
+  "env_info": {
+    "env_id": "Spatial-PlaceContainer-Medium",
+    "env_kwargs": {
+      "obs_mode": "none",
+      "control_mode": "pd_joint_pos",
+      "render_mode": "rgb_array",
+      "sensor_configs": {
+        "shader_pack": "default"
+      },
+      "human_render_camera_configs": {
+        "shader_pack": "default"
+      },
+      "viewer_camera_configs": {
+        "shader_pack": "default"
+      },
+      "sim_backend": "auto",
+      "reconfiguration_freq": 1
+    },
+    "max_episode_steps": 75
+  },
+  "commit_info": {
+    "commit_id": "4854c5e40fc829248f7bc585b55dbb6cea313cc1",
+    "branch": "main"
+  },
+  "episodes": [
+    {
+      "episode_id": 0,
+      "episode_seed": 0,
+      "control_mode": "pd_joint_pos",
+      "elapsed_steps": 538,
+      "task_instruction": "Place the red cube inside the metal bowl",
+      "reset_kwargs": {
+        "options": {},
+        "seed": 0
+      },
+      "success": false
+    },
+    {
+      "episode_id": 1,
+      "episode_seed": 1,
+      "control_mode": "pd_joint_pos",
+      "elapsed_steps": 212,
+      "task_instruction": "Place the red cube inside the metal bowl",
+      "reset_kwargs": {
+        "options": {},
+        "seed": 1
+      },
+      "success": true
+    },
+    {
+      "episode_id": 2,
+      "episode_seed": 2,
+      "control_mode": "pd_joint_pos",
+      "elapsed_steps": 183,
+      "task_instruction": "Place the red cube below the metal bowl",
+      "reset_kwargs": {
+        "options": {},
+        "seed": 2
+      },
+      "success": false
+    },
+    {
+      "episode_id": 3,
+      "episode_seed": 3,
+      "control_mode": "pd_joint_pos",
+      "elapsed_steps": 198,
+      "task_instruction": "Place the red cube inside the metal bowl",
+      "reset_kwargs": {
+        "options": {},
+        "seed": 3
+      },
+      "success": true
+    },
+    {
+      "episode_id": 4,
+      "episode_seed": 4,
+      "control_mode": "pd_joint_pos",
+      "elapsed_steps": 759,
+      "task_instruction": "Place the red cube below the metal bowl",
+      "reset_kwargs": {
+        "options": {},
+        "seed": 4
+      },
+      "success": false
+    },
+    {
+      "episode_id": 5,
+      "episode_seed": 5,
+      "control_mode": "pd_joint_pos",
+      "elapsed_steps": 1407,
+      "task_instruction": "Place the red cube below the metal bowl",
+      "reset_kwargs": {
+        "options": {},
+        "seed": 5
+      },
+      "success": false
+    },
+    {
+      "episode_id": 6,
+      "episode_seed": 6,
+      "control_mode": "pd_joint_pos",
+      "elapsed_steps": 1528,
+      "task_instruction": "Place the red cube inside the metal bowl",
+      "reset_kwargs": {
+        "options": {},
+        "seed": 6
+      },
+      "success": false
+    },
+    {
+      "episode_id": 7,
+      "episode_seed": 7,
+      "control_mode": "pd_joint_pos",
+      "elapsed_steps": 200,
+      "task_instruction": "Place the red cube inside the metal bowl",
+      "reset_kwargs": {
+        "options": {},
+        "seed": 7
+      },
+      "success": true
+    },
+    {
+      "episode_id": 8,
+      "episode_seed": 8,
+      "control_mode": "pd_joint_pos",
+      "elapsed_steps": 140,
+      "task_instruction": "Place the red cube inside the metal bowl",
+      "reset_kwargs": {
+        "options": {},
+        "seed": 8
+      },
+      "success": true
+    },
+    {
+      "episode_id": 9,
+      "episode_seed": 9,
+      "control_mode": "pd_joint_pos",
+      "elapsed_steps": 217,
+      "task_instruction": "Place the red cube below the metal bowl",
+      "reset_kwargs": {
+        "options": {},
+        "seed": 9
+      },
+      "success": true
+    }
+  ],
+  "source_type": "motionplanning",
+  "source_desc": "official motion planning solution from ManiSkill contributors",
+  "task_name": "Spatial-PlaceContainer-Medium"
+}

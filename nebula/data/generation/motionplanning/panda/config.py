@@ -43,5 +43,15 @@ SOLUTIONS_CONFIG = {
     "Dynamic-DistractorBallPickCube-Hard": DynamicHardDistractorBallPickCubeSolution,
     "Dynamic-CatchRollingSphere-Hard": DynamicHardCatchRollingSphereSolution,
     "Dynamic-RollBall-Hard": DynamicHardRollBallSolution,
+
+    # ===== Spatial SOLUTIONS =====
+    "Spatial-MoveCube-Easy": SpatialEasyMoveCubeSolution,
+    "Spatial-PickCube-Easy": SpatialEasyPickCubeSolution,
+    "Spatial-PlaceBetween-Easy": SpatialEasyPlaceBetweenSolution,
+    "Spatial-PickClosest-Medium": SpatialMediumPickClosestSolution,
+    "Spatial-PlaceContainer-Medium": SpatialMediumPlaceContainerSolution,
+    "Spatial-PickCube-Medium": SpatialMediumPickCubeSolution,
+    "Spatial-BuildBlock-Hard": SpatialHardBuildBlockSolution,
+    "Spatial-PickCube-Hard": SpatialHardPickCubeSolution,
 }
 

@@ -14,21 +14,21 @@ from nebula.utils.registration import register_env
 from nebula.utils.scene_builder.table import TableSceneBuilder
 from nebula.utils.structs.pose import Pose
 
-SPATIAL_REFERENCE_MEDIUM_PICK_CLOSEST = """Task Description:
-Pick the cube closest to the reference cube (red cube). 
-The robot must calculate the distance between the reference cube and the target cubes, 
-and pick the closest one.
-
-Randomizations:
-- Target cubes are placed at varying distances from the reference cube.
-- Colors of the cubes are randomized.
-
-Success Conditions:
-- Correctly pick and lift the closest cube.
-"""
-
 @register_env("Spatial-PickClosest-Medium", max_episode_steps=75)
 class SpatialMediumPickClosestEnv(BaseEnv):
+
+    """Task Description:
+    Pick the cube closest to the reference cube (red cube). 
+    The robot must calculate the distance between the reference cube and the target cubes, 
+    and pick the closest one.
+
+    Randomizations:
+    - Target cubes are placed at varying distances from the reference cube.
+    - Colors of the cubes are randomized.
+
+    Success Conditions:
+    - Correctly pick and lift the closest cube.
+    """
     
     SUPPORTED_ROBOTS = ["panda", "fetch"]
     agent: Union[Panda, Fetch]
@@ -295,5 +295,3 @@ class SpatialMediumPickClosestEnv(BaseEnv):
                 wrong_grasp = self.agent.is_grasping(obj).float()
                 penalty += wrong_grasp * 0.3
         return penalty
-
-SpatialMediumPickClosestEnv.__doc__ = SPATIAL_REFERENCE_MEDIUM_PICK_CLOSEST

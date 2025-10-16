@@ -19,7 +19,6 @@ def ControlEasyPlaceSphereSolution(env: ControlPlaceSphereEasyEnv, seed=None, de
 
     FINGER_LENGTH = 0.025
     env = env.unwrapped
-
     
     sphere = env.obj
     bin_target = env.bin

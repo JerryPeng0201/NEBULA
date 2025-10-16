@@ -2,11 +2,10 @@ import numpy as np
 import sapien
 import torch
 
-from nebula.data_collection.motionplanning.panda.motionplanner import PandaArmMotionPlanningSolver
-from nebula.data_collection.motionplanning.panda.utils import (
-    compute_grasp_info_by_obb, get_actor_obb)
+from nebula.data.generation.motionplanning.panda.motionplanner import PandaArmMotionPlanningSolver
+from nebula.data.generation.motionplanning.panda.utils import compute_grasp_info_by_obb, get_actor_obb
 
-from nebula.envs.tasks.capabilities.spatial.easy.place_between import (
+from nebula.benchmarks.capabilities.spatial.easy.place_between import (
     SpatialEasyPlaceBetweenEnv
 )
 
@@ -19,7 +18,7 @@ def _get_elapsed_steps(env, fallback_steps: int = 0) -> int:
         pass
     return int(fallback_steps)
 
-def solve(env: SpatialEasyPlaceBetweenEnv, seed=None, debug=False, vis=False):
+def SpatialEasyPlaceBetweenSolution(env: SpatialEasyPlaceBetweenEnv, seed=None, debug=False, vis=False):
     """
     Motion-planning solution for PlaceBetween task:
     - Grasp the red movable cube
@@ -29,7 +28,7 @@ def solve(env: SpatialEasyPlaceBetweenEnv, seed=None, debug=False, vis=False):
     - Evaluate success after stabilization
     Returns: [{ "success": bool, "elapsed_steps": int }]
     """
-    # 1) Reset + increase episode step limit to avoid early 100-step recording truncation
+    # Reset + increase episode step limit to avoid early 100-step recording truncation
     env.reset(seed=seed)
     if hasattr(env, "env") and hasattr(env.env, "_max_episode_steps"):
         try:
@@ -37,7 +36,7 @@ def solve(env: SpatialEasyPlaceBetweenEnv, seed=None, debug=False, vis=False):
         except Exception:
             env.env._max_episode_steps = 1000
 
-    # 2) Use official planner (internally handles batched torch actions and stepping)
+    # Use official planner (internally handles batched torch actions and stepping)
     planner = PandaArmMotionPlanningSolver(
         env,
         debug=debug,
@@ -50,13 +49,15 @@ def solve(env: SpatialEasyPlaceBetweenEnv, seed=None, debug=False, vis=False):
     FINGER_LENGTH = 0.025
     base_env = env.unwrapped  # Use base env for object/pose access, but step through wrapper to keep recording
 
-    # 3) Get object handles
+    # Get object handles
     movable_cube = base_env.movable_cube  # Red movable cube
     blue_cube    = base_env.blue_cube
     green_cube   = base_env.green_cube
 
     try:
-        # --------------------------- Calculate grasp pose ---------------------------
+        # -------------------------------------------------------------------------- #
+        # Calculate grasp pose
+        # -------------------------------------------------------------------------- #
         # Use OBB for grasp info (same approach as sphere example)
         obb = get_actor_obb(movable_cube)
 
@@ -73,7 +74,9 @@ def solve(env: SpatialEasyPlaceBetweenEnv, seed=None, debug=False, vis=False):
         # Use object's world position as grasp center (sufficient for small cube; use grasp_info["center"] if needed)
         grasp_pose = base_env.agent.build_grasp_pose(approaching, closing, movable_cube.pose.sp.p)
 
-        # ------------------------------ Reach ------------------------------
+        # -------------------------------------------------------------------------- #
+        # Reach
+        # -------------------------------------------------------------------------- #
         reach_pose = grasp_pose * sapien.Pose([0, 0, -0.05])
         res = planner.move_to_pose_with_screw(reach_pose)
         if res == -1:
@@ -81,7 +84,9 @@ def solve(env: SpatialEasyPlaceBetweenEnv, seed=None, debug=False, vis=False):
             planner.close()
             return [{"success": torch.tensor(False, dtype=torch.bool), "elapsed_steps": steps}]
 
-        # ------------------------------ Grasp ------------------------------
+        # -------------------------------------------------------------------------- #
+        # Grasp
+        # -------------------------------------------------------------------------- #
         res = planner.move_to_pose_with_screw(grasp_pose)
         if res == -1:
             steps = _get_elapsed_steps(env, getattr(planner, "steps", 0))
@@ -89,7 +94,9 @@ def solve(env: SpatialEasyPlaceBetweenEnv, seed=None, debug=False, vis=False):
             return [{"success": torch.tensor(False, dtype=torch.bool), "elapsed_steps": steps}]
         planner.close_gripper()
 
-        # ------------------------------ Lift -------------------------------
+        # -------------------------------------------------------------------------- #
+        # Lift
+        # -------------------------------------------------------------------------- #
         lift_pose = sapien.Pose([0, 0, 0.08]) * grasp_pose
         res = planner.move_to_pose_with_screw(lift_pose)
         if res == -1:
@@ -97,7 +104,9 @@ def solve(env: SpatialEasyPlaceBetweenEnv, seed=None, debug=False, vis=False):
             planner.close()
             return [{"success": torch.tensor(False, dtype=torch.bool), "elapsed_steps": steps}]
 
-        # ----------- Calculate midpoint pose (keep grasp orientation, change position) -----------
+        # -------------------------------------------------------------------------- #
+        # Calculate midpoint pose (keep grasp orientation, change position)
+        # -------------------------------------------------------------------------- #
         blue_pos = blue_cube.pose.p
         green_pos = green_cube.pose.p
         if hasattr(blue_pos, "cpu"):  blue_pos  = blue_pos.cpu().numpy()
@@ -111,7 +120,9 @@ def solve(env: SpatialEasyPlaceBetweenEnv, seed=None, debug=False, vis=False):
             base_env.cube_half_size,  # Place at table height
         ], dtype=np.float32)
 
-        # --------------------- Move above midpoint, then lower -----------------------
+        # -------------------------------------------------------------------------- #
+        # Move above midpoint
+        # -------------------------------------------------------------------------- #
         pre_place = midpoint.copy(); pre_place[2] += 0.08
         pre_place_pose = sapien.Pose(pre_place, grasp_pose.q)
         res = planner.move_to_pose_with_screw(pre_place_pose)
@@ -120,6 +131,9 @@ def solve(env: SpatialEasyPlaceBetweenEnv, seed=None, debug=False, vis=False):
             planner.close()
             return [{"success": torch.tensor(False, dtype=torch.bool), "elapsed_steps": steps}]
 
+        # -------------------------------------------------------------------------- #
+        # Lower to place position
+        # -------------------------------------------------------------------------- #
         place_pose = sapien.Pose(midpoint, grasp_pose.q)
         res = planner.move_to_pose_with_screw(place_pose)
         if res == -1:
@@ -127,14 +141,20 @@ def solve(env: SpatialEasyPlaceBetweenEnv, seed=None, debug=False, vis=False):
             planner.close()
             return [{"success": torch.tensor(False, dtype=torch.bool), "elapsed_steps": steps}]
 
-        # ------------------------------ Release ----------------------------
+        # -------------------------------------------------------------------------- #
+        # Release
+        # -------------------------------------------------------------------------- #
         planner.open_gripper()
 
-        # ------------------------------ Retreat ----------------------------
+        # -------------------------------------------------------------------------- #
+        # Retreat
+        # -------------------------------------------------------------------------- #
         retreat_pose = sapien.Pose([0, 0, 0.1]) * place_pose
         res = planner.move_to_pose_with_screw(retreat_pose)
 
-        # -------------------------- Stabilize then evaluate --------------------------
+        # -------------------------------------------------------------------------- #
+        # Stabilize then evaluate
+        # -------------------------------------------------------------------------- #
         # Wait using batched torch actions; planner is already torch batched, cleaner to use planner steps
         # Could also directly use env.step with 0 force action: planner doesn't expose "empty step" interface
         zero_action = torch.zeros((1, *env.action_space.shape), device=env.device, dtype=torch.float32)

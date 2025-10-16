@@ -14,40 +14,39 @@ from nebula.utils.registration import register_env
 from nebula.utils.scene_builder.table import TableSceneBuilder
 from nebula.utils.structs.pose import Pose
 
-SPATIAL_HARD_BUILD_DOC_STRING = """Task Description:
-Test spatial understanding by building a house-like structure with multi-step stacking.
-Robot must demonstrate understanding of 3D spatial relationships and sequential construction.
-
-Construction Sequence:
-1. Place first cube (base) at designated building area
-2. Stack second cube on top of first cube
-3. Place triangular prism (roof) on top of the cube tower
-
-Spatial Understanding Requirements:
-- Stacking stability: Each piece must remain stable when stacked
-- No collapse: Structure must not fall over during or after construction
-- Sequential order: Must follow the correct building sequence (cube1 -> cube2 -> triangle)
-
-Randomizations:
-- Initial positions of all three pieces are randomized on table
-- Building target area is randomized within reachable workspace
-- Slight variations in piece orientations to test adaptation
-
-Success Conditions:
-- All three pieces are stacked in correct order (cube1 -> cube2 -> triangle)
-- Final structure is stable (no pieces falling or moving)
-- Structure remains standing without collapse
-- Robot is static after completion
-
-Challenge Aspects:
-- Requires understanding of 3D spatial relationships
-- Tests stability assessment rather than precision alignment
-- Demands sequential task planning
-- Evaluates physical intuition about stacking stability
-"""
-
 @register_env("Spatial-BuildBlock-Hard", max_episode_steps=150)
 class SpatialHardBuildBlockEnv(BaseEnv):
+    """Task Description:
+    Test spatial understanding by building a house-like structure with multi-step stacking.
+    Robot must demonstrate understanding of 3D spatial relationships and sequential construction.
+
+    Construction Sequence:
+    1. Place first cube (base) at designated building area
+    2. Stack second cube on top of first cube
+    3. Place triangular prism (roof) on top of the cube tower
+
+    Spatial Understanding Requirements:
+    - Stacking stability: Each piece must remain stable when stacked
+    - No collapse: Structure must not fall over during or after construction
+    - Sequential order: Must follow the correct building sequence (cube1 -> cube2 -> triangle)
+
+    Randomizations:
+    - Initial positions of all three pieces are randomized on table
+    - Building target area is randomized within reachable workspace
+    - Slight variations in piece orientations to test adaptation
+
+    Success Conditions:
+    - All three pieces are stacked in correct order (cube1 -> cube2 -> triangle)
+    - Final structure is stable (no pieces falling or moving)
+    - Structure remains standing without collapse
+    - Robot is static after completion
+
+    Challenge Aspects:
+    - Requires understanding of 3D spatial relationships
+    - Tests stability assessment rather than precision alignment
+    - Demands sequential task planning
+    - Evaluates physical intuition about stacking stability
+    """
     
     SUPPORTED_ROBOTS = ["panda", "fetch"]
     agent: Union[Panda, Fetch]
@@ -825,5 +824,3 @@ class SpatialHardBuildBlockEnv(BaseEnv):
             return torch.tensor(0.2, device=self.device)
         else:
             return torch.tensor(0.0, device=self.device)
-
-SpatialHardBuildBlockEnv.__doc__ = SPATIAL_HARD_BUILD_DOC_STRING

@@ -14,35 +14,34 @@ from nebula.utils.registration import register_env
 from nebula.utils.scene_builder.table import TableSceneBuilder
 from nebula.utils.structs.pose import Pose
 
-SPATIAL_EASY_DOC_STRING = """Task Description:
-Pick the specified colored cube based on spatial reference to the blue landmark cube. 
-Each spatial direction (left/right/front/back) contains exactly one colored cube, eliminating ambiguity.
-
-Spatial Relations:
-- Left/Right: Based on robot's perspective with clear separation
-- Front/Back: Based on robot's perspective with clear separation
-- Reference object is always a blue cube at the center
-- Each direction contains exactly ONE colored cube
-
-Unambiguous Design:
-- Spatial exclusivity: Each direction (left/right/front/back) has only one colored cube
-- Clear separation: Minimum distance between cubes ensures distinct spatial regions
-- No overlapping zones: Each cube belongs to exactly one spatial direction
-- Precise instructions: "Pick the red cube to the left of the blue one" has only one valid target
-
-Randomizations:
-- Reference cube (blue) position is randomized on the table
-- Color-to-direction assignments are randomized each episode
-- Small positional variations within each spatial region
-
-Success Conditions:
-- Pick the correct colored cube that satisfies the spatial relation
-- Cube is lifted above minimum height (0.05m)
-- Robot is static after completion
-"""
-
 @register_env("Spatial-PickCube-Easy", max_episode_steps=50)
 class SpatialEasyPickCubeEnv(BaseEnv):
+    """Task Description:
+    Pick the specified colored cube based on spatial reference to the blue landmark cube. 
+    Each spatial direction (left/right/front/back) contains exactly one colored cube, eliminating ambiguity.
+
+    Spatial Relations:
+    - Left/Right: Based on robot's perspective with clear separation
+    - Front/Back: Based on robot's perspective with clear separation
+    - Reference object is always a blue cube at the center
+    - Each direction contains exactly ONE colored cube
+
+    Unambiguous Design:
+    - Spatial exclusivity: Each direction (left/right/front/back) has only one colored cube
+    - Clear separation: Minimum distance between cubes ensures distinct spatial regions
+    - No overlapping zones: Each cube belongs to exactly one spatial direction
+    - Precise instructions: "Pick the red cube to the left of the blue one" has only one valid target
+
+    Randomizations:
+    - Reference cube (blue) position is randomized on the table
+    - Color-to-direction assignments are randomized each episode
+    - Small positional variations within each spatial region
+
+    Success Conditions:
+    - Pick the correct colored cube that satisfies the spatial relation
+    - Cube is lifted above minimum height (0.05m)
+    - Robot is static after completion
+    """
     
     SUPPORTED_ROBOTS = ["panda", "fetch"]
     agent: Union[Panda, Fetch]
@@ -419,5 +418,3 @@ class SpatialEasyPickCubeEnv(BaseEnv):
     
     def get_task_instruction(self):
         return self.task_instruction
-
-SpatialEasyPickCubeEnv.__doc__ = SPATIAL_EASY_DOC_STRING

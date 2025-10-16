@@ -13,41 +13,38 @@ from nebula.utils.registration import register_env
 from nebula.utils.scene_builder.table import TableSceneBuilder
 from nebula.utils.structs.pose import Pose
 
-
-SPATIAL_BETWEEN_DOC_STRING = """Task Description:
-Place a movable red cube between two fixed reference cubes (blue and green).
-The robot must understand the spatial concept of "between" and accurately position
-the red cube in the middle area defined by the two reference cubes.
-
-Spatial Relations:
-- Two reference cubes (blue and green) are placed at random positions
-- Distance between reference cubes is controlled to be reasonable
-- Target position is the midpoint between the two reference cubes
-- "Between" means equidistant from both reference cubes
-
-Task Components:
-- Two fixed reference cubes (blue and green) at random positions
-- One movable cube (red) that needs to be positioned
-- Clear spatial instruction: "Place the red cube between the blue and green cubes"
-- Success requires accurate spatial positioning in the middle area
-
-Randomizations:
-- Blue cube position is randomized on the table
-- Green cube position is randomized relative to blue cube
-- Distance between reference cubes varies within reasonable range
-- Initial position of red movable cube is randomized
-- Reference cubes maintain reasonable separation distance
-
-Success Conditions:
-- Red cube is placed within the middle region between reference cubes
-- Red cube is stable (not moving) after placement
-- Distance from red cube to both reference cubes is approximately equal
-- Placement accuracy is within acceptable tolerance
-"""
-
 @register_env("Spatial-PlaceBetween-Easy", max_episode_steps=50)
 class SpatialEasyPlaceBetweenEnv(BaseEnv):
-    """Place the red cube between two reference cubes (blue & green)."""
+    """Task Description:
+    Place a movable red cube between two fixed reference cubes (blue and green).
+    The robot must understand the spatial concept of "between" and accurately position
+    the red cube in the middle area defined by the two reference cubes.
+
+    Spatial Relations:
+    - Two reference cubes (blue and green) are placed at random positions
+    - Distance between reference cubes is controlled to be reasonable
+    - Target position is the midpoint between the two reference cubes
+    - "Between" means equidistant from both reference cubes
+
+    Task Components:
+    - Two fixed reference cubes (blue and green) at random positions
+    - One movable cube (red) that needs to be positioned
+    - Clear spatial instruction: "Place the red cube between the blue and green cubes"
+    - Success requires accurate spatial positioning in the middle area
+
+    Randomizations:
+    - Blue cube position is randomized on the table
+    - Green cube position is randomized relative to blue cube
+    - Distance between reference cubes varies within reasonable range
+    - Initial position of red movable cube is randomized
+    - Reference cubes maintain reasonable separation distance
+
+    Success Conditions:
+    - Red cube is placed within the middle region between reference cubes
+    - Red cube is stable (not moving) after placement
+    - Distance from red cube to both reference cubes is approximately equal
+    - Placement accuracy is within acceptable tolerance
+    """
 
     SUPPORTED_ROBOTS = ["panda", "fetch"]
     agent: Union[Panda, Fetch]
@@ -56,12 +53,12 @@ class SpatialEasyPlaceBetweenEnv(BaseEnv):
     task_instruction = "Place the red cube between the blue and green cubes."
 
     # Spatial configuration
-    MIN_REFERENCE_DISTANCE = 0.2
-    MAX_REFERENCE_DISTANCE = 0.6
+    MIN_REFERENCE_DISTANCE = 0.5
+    MAX_REFERENCE_DISTANCE = 0.8
     BETWEEN_TOLERANCE = 0.03
     PLACEMENT_TOLERANCE = 0.025
 
-    def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, **kwargs):
+    def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0, **kwargs):
         self.robot_init_qpos_noise = robot_init_qpos_noise
 
         self.color_rgbs = {
@@ -390,6 +387,3 @@ class SpatialEasyPlaceBetweenEnv(BaseEnv):
 
     def compute_normalized_dense_reward(self, obs: Any, action: torch.Tensor, info: Dict):
         return self.compute_dense_reward(obs=obs, action=action, info=info) / 14.0
-
-
-SpatialEasyPlaceBetweenEnv.__doc__ = SPATIAL_BETWEEN_DOC_STRING

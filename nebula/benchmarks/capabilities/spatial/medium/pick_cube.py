@@ -15,28 +15,27 @@ from nebula.utils.scene_builder.table import TableSceneBuilder
 from nebula.utils.structs.pose import Pose
 from typing import Any, Dict, Union, List
 
-SPATIAL_MEDIUM_DOC_STRING = """Task Description:
-Pick cubes based on complex 3D spatial relationships involving multiple reference objects. 
-The robot must understand relations like "inside", "outside", "on top of", "beside" relative to containers and other objects.
-
-Spatial Relations:
-- Inside/Outside: Relative to container objects  
-- On top of/Beside: Vertical and horizontal relationships between objects
-- Multiple reference objects create complex spatial scenes
-
-Randomizations:
-- Container and object positions are randomized in safe areas
-- Multiple objects of different colors
-- Spatial relationships vary between episodes
-
-Success Conditions:
-- Pick the correct object satisfying the spatial description
-- Object is successfully grasped and lifted
-- Robot maintains stability throughout
-"""
-
 @register_env("Spatial-PickCube-Medium", max_episode_steps=75)
 class SpatialMediumPickCubeEnv(BaseEnv):
+    """Task Description:
+    Pick cubes based on complex 3D spatial relationships involving multiple reference objects. 
+    The robot must understand relations like "inside", "outside", "on top of", "beside" relative to containers and other objects.
+
+    Spatial Relations:
+    - Inside/Outside: Relative to container objects  
+    - On top of/Beside: Vertical and horizontal relationships between objects
+    - Multiple reference objects create complex spatial scenes
+
+    Randomizations:
+    - Container and object positions are randomized in safe areas
+    - Multiple objects of different colors
+    - Spatial relationships vary between episodes
+
+    Success Conditions:
+    - Pick the correct object satisfying the spatial description
+    - Object is successfully grasped and lifted
+    - Robot maintains stability throughout
+    """
     
     SUPPORTED_ROBOTS = ["panda", "fetch"]
     agent: Union[Panda, Fetch]
@@ -44,7 +43,7 @@ class SpatialMediumPickCubeEnv(BaseEnv):
     cube_half_size = 0.02
     platform_half_size = 0.1 
     lift_thresh = 0.05
-    task_instruction = "Pick the target object based on spatial relation"
+    task_instruction = "Pick the target object based on spatial relation" # update later
     
     def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, **kwargs):
         self.robot_init_qpos_noise = robot_init_qpos_noise
@@ -57,8 +56,7 @@ class SpatialMediumPickCubeEnv(BaseEnv):
         }
         # Available containers (removed pitcher as it can't hold objects well)
         self.ycb_containers = {
-            "bowl": "024_bowl",
-            "mug": "025_mug"
+            "bowl": "024_bowl",å
         }
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
 
@@ -217,9 +215,6 @@ class SpatialMediumPickCubeEnv(BaseEnv):
             self.target_object = random.choice(list(self.objects.keys()))
             self.task_instruction = self._generate_task_instruction()
             
-            print(f"Medium Task - Container: {self.current_container_type}")
-            print(f"Relation: {self.current_relation_3d}, Target: {self.target_object}")
-            
             # Position container in safe area away from robot
             container_xyz = torch.zeros((b, 3))
             container_xyz[:, :2] = torch.tensor([0.15, 0.12]) + (torch.rand((b, 2)) * 2 - 1) * 0.02
@@ -301,8 +296,6 @@ class SpatialMediumPickCubeEnv(BaseEnv):
         """Get the appropriate base height for different container types"""
         if self.current_container_type == "bowl":
             return 0.04  # Bowls sit lower
-        elif self.current_container_type == "mug":
-            return 0.05  # Mugs are medium height
         else:
             return 0.05  # Default
 
@@ -310,8 +303,6 @@ class SpatialMediumPickCubeEnv(BaseEnv):
         """Get the internal height of different container types for inside relationships"""
         if self.current_container_type == "bowl":
             return 0.06  # Bowl depth
-        elif self.current_container_type == "mug":
-            return 0.08  # Mug height
         else:
             return 0.06  # Default
 
@@ -363,8 +354,8 @@ class SpatialMediumPickCubeEnv(BaseEnv):
         return target_map.get(target_object, 0)
 
     def _encode_container_type(self, container_type):
-        """Encode container type as integer: bowl=0, pitcher=1, mug=2"""
-        container_map = {"bowl": 0, "pitcher": 1, "mug": 2}
+        """Encode container type as integer: bowl=0, pitcher=1"""
+        container_map = {"bowl": 0, "pitcher": 1}
         return container_map.get(container_type, 0)
 
     def _encode_task_type(self, task_type):
@@ -473,5 +464,3 @@ class SpatialMediumPickCubeEnv(BaseEnv):
     
     def get_task_instruction(self):
         return self.task_instruction
-
-SpatialMediumPickCubeEnv.__doc__ = SPATIAL_MEDIUM_DOC_STRING
