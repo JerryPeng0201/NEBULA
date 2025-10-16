@@ -1,14 +1,9 @@
 # <img src="figures/icon.png" height="34px" style="vertical-align: top;"> NEBULA: A Unified Ecosystem for Vision-Language-Action Agent Evaluation
 
-[![License](https://img.shields.io/badge/License-TODO-blue.svg)](LICENSE)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![arXiv](https://img.shields.io/badge/arXiv-TODO-b31b1b.svg)](TODO)
+[![Paper](https://img.shields.io/badge/Paper-TODO-b31b1b.svg)](TODO)
 [![Homepage](https://img.shields.io/badge/Homepage-Visit-blue)](https://your-project.com)
-
-> **NEBULA** is a unified ecosystem for evaluating Vision-Language-Action agents through dual-axis assessment: fine-grained __capability tests__ for skill diagnosis and __systematic__ stress tests for robustness measurement, supported by __standardized APIs__ and __large-scale aggregated datasets__.
-
-[Paper](TODO) | [Documentation](#-documentation) | [Dataset](TODO) | [Leaderboard](TODO)
-
+[![HuggingFace](https://img.shields.io/badge/HuggingFace-ComingSoon-orange)](TODO)
+[![Leaderboard](https://img.shields.io/badge/Leaderboard-TODO-lightgrey)](TODO)
 
 ![Alt text](figures/overall.png)
 
