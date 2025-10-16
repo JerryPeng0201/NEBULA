@@ -201,7 +201,9 @@ We are actively developing & maintaining the NEBULA ecosystem, with the followin
 
 - [ ] **Multi-Simulator Compatibility**: Add support for additional simulators such as MuJoCo, Isaac Gym, RoboSuite, and Webots, enabling broader research integration.
 
-- [ ] **Human-in-the-Loop Interaction Module**： Enable real-time interaction with simulated robots and support user-defined task creation, dynamic goal injection, and adaptive feedback during execution.
+- [ ] **Human-in-the-Loop Interaction Module**: Enable real-time interaction with simulated robots and support user-defined task creation, dynamic goal injection, and adaptive feedback during execution.
+
+- [ ] **World Model-Augmented Data Generation**: Provide a fully automated pipeline for generating high-quality training data using world models. This includes environment simulation, agent rollout, annotation, and format conversion—all without manual intervention.
 
 
 ## 🤝 Contributing
