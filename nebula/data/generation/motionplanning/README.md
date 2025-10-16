@@ -46,14 +46,3 @@ To customize Nebula motion planning data collection for a different robot, use t
 
 ---
 
-**Acknowledgement:**  
-This implementation is inspired by [ManiSkill3](https://github.com/haosulab/ManiSkill):
-
-```
-@article{taomaniskill3,
-  title={ManiSkill3: GPU Parallelized Robotics Simulation and Rendering for Generalizable Embodied AI},
-  author={Stone Tao et al.},
-  journal = {Robotics: Science and Systems},
-  year={2025},
-}
-```
