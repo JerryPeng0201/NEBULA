@@ -15,36 +15,35 @@ from nebula.utils.registration import register_env
 from nebula.utils.scene_builder.table import TableSceneBuilder
 from nebula.utils.structs.pose import Pose
 
-SPATIAL_HARD_DOC_STRING = """Task Description:
-Perform complex multi-step spatial reasoning with nested spatial relationships. 
-The robot must understand complex relations such as:
-- "Pick the green cube that is on top of the object inside the red container"
-- "Pick the blue cube that is beside the object under the platform"
-- "Pick the object that is behind the stacked items"
-
-This requires:
-1. Multi-step spatial reasoning (container -> inside object -> on top object)
-2. Understanding complex spatial hierarchies and relationships
-3. Identifying target objects through nested spatial descriptions
-
-Spatial Relations:
-- Nested relationships: "on_top_of_inside", "beside_under_platform", "behind_stacked_items"
-- Multiple reference objects creating complex spatial scenes
-- Clear spatial hierarchies with unambiguous arrangements
-
-Randomizations:
-- Complex nested object arrangements with 2-3 levels of spatial hierarchy
-- Multiple containers and platforms in different configurations  
-- Random spatial relationship selection for each episode
-
-Success Conditions:
-- Successfully identify and pick the correct target object through multi-step reasoning
-- Object is grasped and lifted above minimum threshold
-- Robot maintains stability throughout the task
-"""
-
 @register_env("Spatial-PickCube-Hard", max_episode_steps=150)
 class SpatialHardPickCubeEnv(BaseEnv):
+    """Task Description:
+    Perform complex multi-step spatial reasoning with nested spatial relationships. 
+    The robot must understand complex relations such as:
+    - "Pick the green cube that is on top of the object inside the red container"
+    - "Pick the blue cube that is beside the object under the platform"
+    - "Pick the object that is behind the stacked items"
+
+    This requires:
+    1. Multi-step spatial reasoning (container -> inside object -> on top object)
+    2. Understanding complex spatial hierarchies and relationships
+    3. Identifying target objects through nested spatial descriptions
+
+    Spatial Relations:
+    - Nested relationships: "on_top_of_inside", "beside_under_platform", "behind_stacked_items"
+    - Multiple reference objects creating complex spatial scenes
+    - Clear spatial hierarchies with unambiguous arrangements
+
+    Randomizations:
+    - Complex nested object arrangements with 2-3 levels of spatial hierarchy
+    - Multiple containers and platforms in different configurations  
+    - Random spatial relationship selection for each episode
+
+    Success Conditions:
+    - Successfully identify and pick the correct target object through multi-step reasoning
+    - Object is grasped and lifted above minimum threshold
+    - Robot maintains stability throughout the task
+    """
     
     SUPPORTED_ROBOTS = ["panda", "fetch"]
     agent: Union[Panda, Fetch]
@@ -52,6 +51,8 @@ class SpatialHardPickCubeEnv(BaseEnv):
     cube_half_size = 0.02
     platform_half_size = [0.08, 0.08, 0.01]  # Flat rectangular platform
     lift_thresh = 0.06
+
+    task_instruction = ""
     
     def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, **kwargs):
         self.robot_init_qpos_noise = robot_init_qpos_noise
@@ -77,7 +78,6 @@ class SpatialHardPickCubeEnv(BaseEnv):
         # Available containers (using YCB models)
         self.ycb_containers = {
             "bowl": "024_bowl",
-            "mug": "025_mug"
         }
         
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
@@ -249,10 +249,6 @@ class SpatialHardPickCubeEnv(BaseEnv):
             self.intermediate_object_color = random.choice([k for k in available_colors 
                                                           if k != self.target_object_color])
             
-            print(f"Hard Task - Container: {self.current_container_type}")
-            print(f"Relation: {self.current_complex_relation}")
-            print(f"Target: {self.target_object_color}, Intermediate: {self.intermediate_object_color}")
-            
             # Position container and platform
             self._position_container_and_platform(b)
             
@@ -261,43 +257,6 @@ class SpatialHardPickCubeEnv(BaseEnv):
             
             # Position remaining objects as distractors in neutral positions
             self._position_distractor_objects(b)
-            
-            # Let physics settle with enhanced stability control
-            for step in range(20):  # More settling steps
-                self.scene.step()
-                
-                # Ensure container stays stable
-                self.container.set_linear_velocity(torch.zeros((b, 3)))
-                self.container.set_angular_velocity(torch.zeros((b, 3)))
-                
-                # Ensure platform stays stable
-                self.platform.set_linear_velocity(torch.zeros((b, 3)))
-                self.platform.set_angular_velocity(torch.zeros((b, 3)))
-                
-                # Stabilize all objects - prevent them from flying away
-                for obj in self.objects.values():
-                    current_pos = obj.pose.p
-                    current_vel = obj.linear_velocity
-                    
-                    # Check if object is too high (flying away)
-                    if current_pos[:, 2] > 0.5:  # If higher than 0.5m
-                        # Reset to safe position on table
-                        safe_xyz = torch.zeros((b, 3))
-                        safe_xyz[:, :2] = (torch.rand((b, 2)) * 2 - 1) * 0.10  # Random safe position
-                        safe_xyz[:, 2] = self.cube_half_size
-                        obj.set_pose(Pose.create_from_pq(safe_xyz))
-                        print(f"WARNING: Reset {obj.name} from flying position")
-                    
-                    # Dampen excessive velocities
-                    if torch.linalg.norm(current_vel) > 0.1:  # If moving too fast
-                        obj.set_linear_velocity(current_vel * 0.5)  # Reduce velocity
-                        obj.set_angular_velocity(obj.angular_velocity * 0.5)
-                    
-                    # Ensure objects stay on table surface (minimum height)
-                    if current_pos[:, 2] < self.cube_half_size * 0.8:  # If sinking below table
-                        corrected_pos = current_pos.clone()
-                        corrected_pos[:, 2] = self.cube_half_size
-                        obj.set_pose(Pose.create_from_pq(p=corrected_pos[:, :3], q=obj.pose.q))
 
     def _position_container_and_platform(self, b):
         """Position container and platform with separation"""
@@ -558,8 +517,6 @@ class SpatialHardPickCubeEnv(BaseEnv):
         """Get the appropriate base height for different container types"""
         if self.current_container_type == "bowl":
             return 0.04  # Bowls sit lower
-        elif self.current_container_type == "mug":
-            return 0.05  # Mugs are medium height
         else:
             return 0.05  # Default
 
@@ -567,8 +524,6 @@ class SpatialHardPickCubeEnv(BaseEnv):
         """Get the internal height of different container types for inside relationships"""
         if self.current_container_type == "bowl":
             return 0.06  # Bowl depth
-        elif self.current_container_type == "mug":
-            return 0.08  # Mug height
         else:
             return 0.06  # Default
 
@@ -641,8 +596,8 @@ class SpatialHardPickCubeEnv(BaseEnv):
         return color_map.get(color, 0)
 
     def _encode_container_type(self, container_type):
-        """Encode container type as integer: bowl=0, mug=1"""
-        container_map = {"bowl": 0, "mug": 1}
+        """Encode container type as integer: bowl=0"""
+        container_map = {"bowl": 0}
         return container_map.get(container_type, 0)
 
     def _encode_task_type(self, task_type):
@@ -760,5 +715,3 @@ class SpatialHardPickCubeEnv(BaseEnv):
     
     def get_task_instruction(self):
         return self._generate_task_instruction()
-
-SpatialHardPickCubeEnv.__doc__ = SPATIAL_HARD_DOC_STRING

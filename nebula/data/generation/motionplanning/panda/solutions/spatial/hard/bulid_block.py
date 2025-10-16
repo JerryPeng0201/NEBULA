@@ -1,14 +1,10 @@
 import numpy as np
 import sapien
 import torch
-
-from nebula.data_collection.motionplanning.panda.motionplanner import PandaArmMotionPlanningSolver
-from nebula.data_collection.motionplanning.panda.utils import (
-    compute_grasp_info_by_obb, get_actor_obb)
-
-from nebula.envs.tasks.capabilities.spatial.hard.build_block import (
-    SpatialHardBuildBlockEnv
-)
+from transforms3d.euler import euler2quat
+from nebula.benchmarks.capabilities.spatial.hard.build_block import SpatialHardBuildBlockEnv
+from nebula.data.generation.motionplanning.panda.motionplanner import PandaArmMotionPlanningSolver
+from nebula.data.generation.motionplanning.panda.utils import compute_grasp_info_by_obb, get_actor_obb
 
 def _get_elapsed_steps(env, fallback_steps: int = 0) -> int:
     """Get trajectory steps (Python int)"""
@@ -19,7 +15,7 @@ def _get_elapsed_steps(env, fallback_steps: int = 0) -> int:
         pass
     return int(fallback_steps)
 
-def solve(env: SpatialHardBuildBlockEnv, seed=None, debug=False, vis=False):
+def SpatialHardBuildBlockSolution(env: SpatialHardBuildBlockEnv, seed=None, debug=False, vis=False):
     """
     Motion-planning solution for BuildBlock task with in-place stacking strategy:
     1. Leave cube1 (red) at its current position - DO NOT MOVE IT
@@ -51,7 +47,9 @@ def solve(env: SpatialHardBuildBlockEnv, seed=None, debug=False, vis=False):
     triangle = base_env.objects["triangle"]
 
     try:
-        # ===================== STEP 1: Get cube1 position and stack cube2 on it =====================
+        # -------------------------------------------------------------------------- #
+        # Get cube1 position and calculate cube2 target position
+        # -------------------------------------------------------------------------- #
         
         # Get cube1's current position (DON'T MOVE IT)
         cube1_pos = cube1.pose.p
@@ -67,7 +65,9 @@ def solve(env: SpatialHardBuildBlockEnv, seed=None, debug=False, vis=False):
             cube1_pos[2] + base_env.cube_half_size * 2  # Stack height: cube1_top + cube2_half_height
         ])
         
+        # -------------------------------------------------------------------------- #
         # Place cube2 on cube1
+        # -------------------------------------------------------------------------- #
         success = place_object_at_position(
             planner, base_env, cube2,
             target_position=cube2_target_pos,
@@ -80,7 +80,9 @@ def solve(env: SpatialHardBuildBlockEnv, seed=None, debug=False, vis=False):
             planner.close()
             return [{"success": torch.tensor(False, dtype=torch.bool), "elapsed_steps": steps}]
 
-        # ===================== STEP 2: Place triangle on top of cube tower =====================
+        # -------------------------------------------------------------------------- #
+        # Calculate triangle target position and place on cube tower
+        # -------------------------------------------------------------------------- #
         
         # Calculate triangle position - on top of the cube tower
         triangle_target_pos = np.array([
@@ -102,7 +104,9 @@ def solve(env: SpatialHardBuildBlockEnv, seed=None, debug=False, vis=False):
             planner.close()
             return [{"success": torch.tensor(False, dtype=torch.bool), "elapsed_steps": steps}]
 
+        # -------------------------------------------------------------------------- #
         # Evaluate final result
+        # -------------------------------------------------------------------------- #
         evaluation = env.evaluate()
         success = evaluation.get("success", False)
 
@@ -136,7 +140,9 @@ def place_object_at_position(planner, base_env, obj, target_position, object_nam
     FINGER_LENGTH = 0.025
     
     try:
-        # ===== CALCULATE GRASP POSE =====
+        # -------------------------------------------------------------------------- #
+        # Calculate grasp pose
+        # -------------------------------------------------------------------------- #
         
         # Get object's oriented bounding box
         obb = get_actor_obb(obj)
@@ -168,55 +174,48 @@ def place_object_at_position(planner, base_env, obj, target_position, object_nam
         # Build grasp pose
         grasp_pose = base_env.agent.build_grasp_pose(approaching, closing, obj_pos)
 
-        # ===== PICK SEQUENCE =====
-        
-        # 1. Approach pose (hover above object)
+        # -------------------------------------------------------------------------- #
+        # Reach
+        # -------------------------------------------------------------------------- #
         approach_height = 0.06
         approach_pose = grasp_pose * sapien.Pose([0, 0, -approach_height])
         res = planner.move_to_pose_with_screw(approach_pose)
-        if res == -1:
-            return False
 
-        # 2. Grasp pose (contact with object)
+        # -------------------------------------------------------------------------- #
+        # Grasp
+        # -------------------------------------------------------------------------- #
         res = planner.move_to_pose_with_screw(grasp_pose)
-        if res == -1:
-            return False
-        
-        # 3. Close gripper
         planner.close_gripper()
 
-        # 4. Lift object
+        # -------------------------------------------------------------------------- #
+        # Lift
+        # -------------------------------------------------------------------------- #
         lift_height = 0.10 if object_name != "triangle" else 0.15
         lift_pose = sapien.Pose([0, 0, lift_height]) * grasp_pose
         res = planner.move_to_pose_with_screw(lift_pose)
-        if res == -1:
-            return False
 
-        # ===== PLACE SEQUENCE =====
-        
-        # 5. Pre-place pose (hover above target)
+        # -------------------------------------------------------------------------- #
+        # Move to pre-place position
+        # -------------------------------------------------------------------------- #
         hover_height = 0.10 if object_name != "triangle" else 0.15
         pre_place_pose = sapien.Pose(target_position + np.array([0, 0, hover_height]), grasp_pose.q)
         res = planner.move_to_pose_with_screw(pre_place_pose)
-        if res == -1:
-            return False
 
-        # 6. Final place pose
+        # -------------------------------------------------------------------------- #
+        # Place
+        # -------------------------------------------------------------------------- #
         place_pose = sapien.Pose(target_position, grasp_pose.q)
         res = planner.move_to_pose_with_screw(place_pose)
-        if res == -1:
-            return False
-
-        # 7. Open gripper (release object)
         planner.open_gripper()
 
-        # 8. Retreat (move away from placed object)
+        # -------------------------------------------------------------------------- #
+        # Retreat
+        # -------------------------------------------------------------------------- #
         retreat_height = 0.12 if object_name != "triangle" else 0.18
         retreat_pose = sapien.Pose([0, 0, retreat_height]) * place_pose
         res = planner.move_to_pose_with_screw(retreat_pose)
-        # Note: Don't fail on retreat - it's not critical for task success
         
-        return True
+        return res
 
     except Exception as e:
-        return False
+        return res

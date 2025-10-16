@@ -48,6 +48,9 @@ Access key components of the NEBULA ecosystem below:
 - 🎮 **[Teleoperation Module](./nebula/data/generation/teleoperation/README.md)**  
   See how human demonstrations are collected via teleoperation to capture natural, adaptive behaviors in dynamic and complex scenes.
 
+- 🎯 **[Baseline Adapter](./baselines/README.md)**  
+  Access pre-configured baseline models with standardized training / fine-tuning, evaluation, and visualization scripts.
+
 ## 📦 Installation
 
 Follow the steps below to set up NEBULA on your local machine. The installation process supports both local development and benchmark evaluation.
@@ -59,7 +62,7 @@ Follow the steps below to set up NEBULA on your local machine. The installation 
 
 - CUDA==12.4
 
-### Step #1: Clone the Repository
+### Step 1️⃣: Clone the Repository
 
 ```bash
 git clone https://github.com/JerryPeng0201/NEBULA-Alpha.git
@@ -67,7 +70,7 @@ git clone https://github.com/JerryPeng0201/NEBULA-Alpha.git
 cd NEBULA-Alpha
 ```
 
-### Step #2: Install Dependencies
+### Step 2️⃣: Install Dependencies
 
 ```bash
 conda create -n nebula python=3.10
@@ -114,16 +117,26 @@ We currently provide **six baseline agents** along with precomputed results and 
 - [SpatialVLA](./baselines/SpatialVLA/README.md)
 - [RDT-1B](./baselines/RDT/README.md)
 - [Diffusion Policy](./baselines/DP/README.md)
-- [MT-ACT](./baselines/mt-act/README.md)
-- [ACT](./baselines/act/README.md)
+- MT-ACT 🚧
+- ACT 🚧
 - [Customized Models](./baselines/custom/README.md)
 
 Each folder contains:
 - Training / fine-tuning scripts
 - Evaluation configs (`*.yaml`)
-- Output JSON results
-- GIF samples (optional)
 
+📋 Progress:
+
+| Baseline | Fine-tuning | Inference & Visualization | Checkpoint |
+|----------|-------------|---------------------------|------------|
+| GR00T-1.5 | ✅ | ✅ | 🚧 |
+| SpatialVLA | ✅ | ✅ | 🚧 |
+| RDT-1B | ✅ | ✅ | 🚧 |
+| Diffusion Policy | ✅ | ✅ | 🚧 |
+| MT-ACT | 🚧 | 🚧 | 🚧 |
+| ACT | 🚧 | 🚧 | 🚧 |
+
+**TODO**: _Fine-tuned checkpoints and more model adapters are going to be released soon._
 
 ### 📊 Comparing Multiple Models
 
@@ -219,8 +232,6 @@ We are actively building partnerships across academia and industry to expand the
 ## 🙏 Acknowledgements
 
 NEBULA is built on top of the excellent work from **Sapien** and [**ManiSkill3**](https://github.com/haosulab/ManiSkill/tree/main). We have leveraged their simulation infrastructure, logic, and assets throughout the development of our platform. We express our deep gratitude and sincere respect to their development teams for making such powerful tools openly available to the community.
-
-We would also like to thank [**Professor Yu Yin**](https://case.edu/engineering/about/faculty-and-staff-directory/yu-yin) and [**Professor Vipin Chaudhary**](https://case.edu/engineering/about/faculty-and-staff-directory/vipin-chaudhary) for their invaluable guidance and thoughtful suggestions throughout the design and implementation of NEBULA.
 
 Salute! 🫡
 

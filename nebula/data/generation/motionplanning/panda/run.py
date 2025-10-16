@@ -92,6 +92,7 @@ def _main(args, proc_id: int = 0, start_seed: int = 0) -> str:
             elapsed_steps = res[-1]["elapsed_steps"]
             solution_episode_lengths.append(elapsed_steps)
         successes.append(success)
+
         if args.only_count_success and not success:
             seed += 1
             env.flush_trajectory(save=False)
@@ -109,7 +110,6 @@ def _main(args, proc_id: int = 0, start_seed: int = 0) -> str:
                     failed_motion_plan_rate=failed_motion_plans / (seed + 1),
                     avg_episode_length=np.mean(solution_episode_lengths),
                     max_episode_length=np.max(solution_episode_lengths),
-                    # min_episode_length=np.min(solution_episode_lengths)
                 )
             )
             seed += 1
@@ -143,7 +143,6 @@ def main(args):
         _main(args)
 
 if __name__ == "__main__":
-    # start = time.time()
     mp.set_start_method("spawn")
     main(parse_args())
-    # print(f"Total time taken: {time.time() - start}")
+

@@ -2,7 +2,7 @@ import numpy as np
 import sapien
 import torch
 from transforms3d.euler import euler2quat
-from nebula.benchmarks.capabilities.spatial.hard.pick_cube import SpatialHardPickCubeEnv
+from nebula.benchmarks.capabilities.spatial.medium.pick_cube import SpatialMediumPickCubeEnv
 from nebula.data.generation.motionplanning.panda.motionplanner import PandaArmMotionPlanningSolver
 from nebula.data.generation.motionplanning.panda.utils import compute_grasp_info_by_obb, get_actor_obb
 
@@ -15,23 +15,17 @@ def _get_elapsed_steps(env, fallback_steps: int = 0) -> int:
         pass
     return int(fallback_steps)
 
-def SpatialHardPickCubeSolution(env: SpatialHardPickCubeEnv, seed=None, debug=False, vis=False):
+def SpatialMediumPickCubeSolution(env: SpatialMediumPickCubeEnv, seed=None, debug=False, vis=False):
     """
-    Motion-planning solution for complex spatial reasoning pick task:
-    - Identify target object through nested spatial relationships
-    - Navigate complex spatial hierarchies (on_top_of_inside, beside_under_platform, etc.)
+    Motion-planning solution for PickCube task with 3D spatial relations:
+    - Identify target object based on spatial relation (inside/outside/on_top_of/beside)
     - Grasp the correct target object
-    - Lift to demonstrate successful pick
+    - Lift the object to demonstrate successful pick
     - Maintain robot stability
     Returns: [{ "success": bool, "elapsed_steps": int }]
     """
     # Reset environment
     env.reset(seed=seed)
-    if hasattr(env, "env") and hasattr(env.env, "_max_episode_steps"):
-        try:
-            env.env._max_episode_steps = max(1000, int(getattr(env.env, "_max_episode_steps", 100)))
-        except Exception:
-            env.env._max_episode_steps = 1000
 
     planner = PandaArmMotionPlanningSolver(
         env,
@@ -45,9 +39,9 @@ def SpatialHardPickCubeSolution(env: SpatialHardPickCubeEnv, seed=None, debug=Fa
     FINGER_LENGTH = 0.025
     base_env = env.unwrapped
 
-    # Get target object through complex spatial reasoning
-    target_object_color = base_env.target_object_color
-    target_object = base_env.objects[target_object_color]
+    # Get target object based on spatial relation
+    target_object_name = base_env.target_object
+    target_object = base_env.objects[target_object_name]
 
     try:
         # -------------------------------------------------------------------------- #
@@ -89,7 +83,7 @@ def SpatialHardPickCubeSolution(env: SpatialHardPickCubeEnv, seed=None, debug=Fa
         # -------------------------------------------------------------------------- #
         # Lift
         # -------------------------------------------------------------------------- #
-        lift_pose = sapien.Pose([0, 0, 0.12]) * grasp_pose
+        lift_pose = sapien.Pose([0, 0, 0.10]) * grasp_pose
         res = planner.move_to_pose_with_screw(lift_pose)
         if res == -1:
             steps = _get_elapsed_steps(env, getattr(planner, "steps", 0))
@@ -100,7 +94,7 @@ def SpatialHardPickCubeSolution(env: SpatialHardPickCubeEnv, seed=None, debug=Fa
         # Stabilize then evaluate
         # -------------------------------------------------------------------------- #
         zero_action = torch.zeros((1, *env.action_space.shape), device=env.device, dtype=torch.float32)
-        for _ in range(25):
+        for _ in range(20):
             obs, r, terminated, truncated, info = env.step(zero_action)
             if terminated or truncated:
                 break
@@ -113,7 +107,7 @@ def SpatialHardPickCubeSolution(env: SpatialHardPickCubeEnv, seed=None, debug=Fa
         return [{"success": success, "elapsed_steps": steps}]
 
     except Exception as e:
-        print(f"[PickCube Hard solver] Error: {e}")
+        print(f"[PickCube solver] Error: {e}")
         import traceback
         traceback.print_exc()
         steps = _get_elapsed_steps(env, getattr(planner, "steps", 0))
