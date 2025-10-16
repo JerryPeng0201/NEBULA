@@ -115,12 +115,12 @@ def SpatialMediumPlaceContainerSolution(env, seed=None, debug=False, vis=False):
     # Release and Retreat
     # -------------------------------------------------------------------------- #
     # Open gripper
-    res = planner.open_gripper()
+    planner.open_gripper()
     
     # Retreat safely based on direction
     retreat_offset = [0, 0, -0.08] if target_direction != "bottom" else [0.1, 0, 0]
     retreat_pose = place_pose * sapien.Pose(retreat_offset)
-    planner.move_to_pose_with_screw(retreat_pose)
+    res = planner.move_to_pose_with_screw(retreat_pose)
     
     planner.close()
     return res

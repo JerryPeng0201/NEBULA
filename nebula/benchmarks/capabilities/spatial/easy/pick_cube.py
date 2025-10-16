@@ -206,19 +206,11 @@ class SpatialEasyPickCubeEnv(BaseEnv):
             # Generate unambiguous instruction
             self.task_instruction = f"Pick the cube to the {self.target_direction} of the blue one"
             
-            #print(f"Spatial Instruction: '{self.task_instruction}'")
-            #print(f"Spatial Assignments: {self.spatial_assignments}")
-            #print(f"Target: {self.target_color} cube ({self.target_direction})")
-            
             # Position reference cube (blue) in center area
             self._position_reference_cube(b)
             
             # Position colored cubes in their assigned spatial directions
             self._position_spatial_cubes(b)
-            
-            # Let physics settle
-            for _ in range(10):
-                self.scene.step()
 
     def _position_reference_cube(self, b):
         """Position the blue reference cube in the center area"""

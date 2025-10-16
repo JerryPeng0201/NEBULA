@@ -176,14 +176,14 @@ class SpatialEasyMoveCubeEnv(BaseEnv):
             self.green_cube.set_pose(Pose.create_from_pq(p=green_xyz))
 
             # Place red cube at random position (avoid collision with green cube)
-            red_xy = torch.rand((b, 2), device=self.device) * 0.8 - 0.4
+            red_xy = torch.rand((b, 2), device=self.device) * 0.4 - 0.2
             # Ensure red cube is not too close to green cube initially
             distance_to_center = torch.linalg.norm(red_xy, axis=1)
-            too_close_mask = distance_to_center < 0.15
+            too_close_mask = distance_to_center < 0.10
             while too_close_mask.any():
-                red_xy[too_close_mask] = torch.rand((too_close_mask.sum(), 2), device=self.device) * 0.8 - 0.4
+                red_xy[too_close_mask] = torch.rand((too_close_mask.sum(), 2), device=self.device) * 0.4 - 0.2
                 distance_to_center[too_close_mask] = torch.linalg.norm(red_xy[too_close_mask], axis=1)
-                too_close_mask = distance_to_center < 0.15
+                too_close_mask = distance_to_center < 0.10
 
             xyz[:, :2] = red_xy
             self.red_cube.set_pose(Pose.create_from_pq(p=xyz))

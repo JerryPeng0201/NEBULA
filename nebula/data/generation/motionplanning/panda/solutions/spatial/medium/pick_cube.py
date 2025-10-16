@@ -26,11 +26,6 @@ def SpatialMediumPickCubeSolution(env: SpatialMediumPickCubeEnv, seed=None, debu
     """
     # Reset environment
     env.reset(seed=seed)
-    if hasattr(env, "env") and hasattr(env.env, "_max_episode_steps"):
-        try:
-            env.env._max_episode_steps = max(1000, int(getattr(env.env, "_max_episode_steps", 100)))
-        except Exception:
-            env.env._max_episode_steps = 1000
 
     planner = PandaArmMotionPlanningSolver(
         env,

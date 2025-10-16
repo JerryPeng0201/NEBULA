@@ -39,7 +39,6 @@ def SpatialEasyMoveCubeSolution(env: SpatialEasyMoveCubeEnv, seed=None, debug=Fa
     )
     closing, center = grasp_info_red["closing"], grasp_info_red["center"]
     
-    # Fix tensor indexing - get position as numpy array
     red_cube_pos = red_cube.pose.p[0].cpu().numpy()
     red_grasp_pose = env.agent.build_grasp_pose(approaching, closing, red_cube_pos)
 
@@ -64,7 +63,7 @@ def SpatialEasyMoveCubeSolution(env: SpatialEasyMoveCubeEnv, seed=None, debug=Fa
     # -------------------------------------------------------------------------- #
     # Calculate target position
     # -------------------------------------------------------------------------- #
-    # Get current green cube position (reference cube) - fix tensor indexing
+    # Get current green cube position (reference cube)
     green_cube_pos = green_cube.pose.p[0].cpu().numpy()
     
     # Calculate target placement position based on spatial direction

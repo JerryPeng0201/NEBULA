@@ -180,15 +180,11 @@ def place_object_at_position(planner, base_env, obj, target_position, object_nam
         approach_height = 0.06
         approach_pose = grasp_pose * sapien.Pose([0, 0, -approach_height])
         res = planner.move_to_pose_with_screw(approach_pose)
-        if res == -1:
-            return False
 
         # -------------------------------------------------------------------------- #
         # Grasp
         # -------------------------------------------------------------------------- #
         res = planner.move_to_pose_with_screw(grasp_pose)
-        if res == -1:
-            return False
         planner.close_gripper()
 
         # -------------------------------------------------------------------------- #
@@ -197,8 +193,6 @@ def place_object_at_position(planner, base_env, obj, target_position, object_nam
         lift_height = 0.10 if object_name != "triangle" else 0.15
         lift_pose = sapien.Pose([0, 0, lift_height]) * grasp_pose
         res = planner.move_to_pose_with_screw(lift_pose)
-        if res == -1:
-            return False
 
         # -------------------------------------------------------------------------- #
         # Move to pre-place position
@@ -206,16 +200,12 @@ def place_object_at_position(planner, base_env, obj, target_position, object_nam
         hover_height = 0.10 if object_name != "triangle" else 0.15
         pre_place_pose = sapien.Pose(target_position + np.array([0, 0, hover_height]), grasp_pose.q)
         res = planner.move_to_pose_with_screw(pre_place_pose)
-        if res == -1:
-            return False
 
         # -------------------------------------------------------------------------- #
         # Place
         # -------------------------------------------------------------------------- #
         place_pose = sapien.Pose(target_position, grasp_pose.q)
         res = planner.move_to_pose_with_screw(place_pose)
-        if res == -1:
-            return False
         planner.open_gripper()
 
         # -------------------------------------------------------------------------- #
@@ -224,9 +214,8 @@ def place_object_at_position(planner, base_env, obj, target_position, object_nam
         retreat_height = 0.12 if object_name != "triangle" else 0.18
         retreat_pose = sapien.Pose([0, 0, retreat_height]) * place_pose
         res = planner.move_to_pose_with_screw(retreat_pose)
-        # Note: Don't fail on retreat - it's not critical for task success
         
-        return True
+        return res
 
     except Exception as e:
-        return False
+        return res

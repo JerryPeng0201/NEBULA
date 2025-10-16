@@ -298,12 +298,7 @@ class SpatialMediumPlaceContainerEnv(BaseEnv):
         
         # Check if cube is within reasonable bounds
         within_workspace = (torch.abs(cube_pos[0]) < 0.5) and (torch.abs(cube_pos[1]) < 0.5) and (cube_pos[2] < 0.5)
-        
         success = (correct_3d_placement & is_stable & cube_above_ground & robot_clear & within_workspace)
-        if not torch.is_tensor(success):
-            success = torch.tensor(bool(success), device=self.device)
-        if success.ndim == 0:
-            success = success.reshape(1)
         
         return {
             "success": success,

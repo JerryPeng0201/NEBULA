@@ -67,7 +67,7 @@ Follow the steps below to set up NEBULA on your local machine. The installation 
 
 - CUDA==12.4
 
-### Step #1: Clone the Repository
+### Step 1️⃣: Clone the Repository
 
 ```bash
 git clone https://github.com/JerryPeng0201/NEBULA-Alpha.git
@@ -75,7 +75,7 @@ git clone https://github.com/JerryPeng0201/NEBULA-Alpha.git
 cd NEBULA-Alpha
 ```
 
-### Step #2: Install Dependencies
+### Step 2️⃣: Install Dependencies
 
 ```bash
 conda create -n nebula python=3.10

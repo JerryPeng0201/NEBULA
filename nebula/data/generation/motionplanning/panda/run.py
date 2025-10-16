@@ -92,6 +92,7 @@ def _main(args, proc_id: int = 0, start_seed: int = 0) -> str:
             elapsed_steps = res[-1]["elapsed_steps"]
             solution_episode_lengths.append(elapsed_steps)
         successes.append(success)
+
         if args.only_count_success and not success:
             seed += 1
             env.flush_trajectory(save=False)
@@ -144,3 +145,4 @@ def main(args):
 if __name__ == "__main__":
     mp.set_start_method("spawn")
     main(parse_args())
+
