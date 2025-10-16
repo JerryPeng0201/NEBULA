@@ -73,7 +73,7 @@ def main(args: Args):
         env = RecordEpisode(
             env,
             output_dir=output_dir,
-            trajectory_name="trajectory",
+            trajectory_name="trajectory_tmp",
             save_video=False,
             info_on_video=False,
             task_name=args.env_id,
@@ -130,6 +130,7 @@ def main(args: Args):
         env = RecordEpisode(
                 env_gym,
                 output_dir=output_dir,
+                trajectory_name="trajectory",
                 save_video=True,
                 info_on_video=False,
                 save_trajectory=True,

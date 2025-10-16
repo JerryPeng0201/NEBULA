@@ -96,6 +96,7 @@ python -m nebula.data.generation.teleoperation.panda.interactive -h
 ```
 h: print help menu
 g: toggle gripper open/close
+t: print task instruction
 u: move hand up
 j: move hand down
 k/l: rotate grasp pose in Yaw
@@ -113,15 +114,3 @@ q: quit and save data
 To adapt Nebula Teleoperation for a different robot, use the [Panda implementation](panda) as a reference. For each new robot, implement a local motion planner solver and/or a remote motion planner solver. The local solver can follow the approach in [Nebula Motion Planning data collection](../motionplanning/README.md). Update relevant files and configurations to ensure compatibility with your robot model and specific tasks.
 
 ---
-
-**Acknowledgement:**  
-This implementation is inspired by [ManiSkill3](https://github.com/haosulab/ManiSkill):
-
-```
-@article{taomaniskill3,
-  title={ManiSkill3: GPU Parallelized Robotics Simulation and Rendering for Generalizable Embodied AI},
-  author={Stone Tao et al.},
-  journal = {Robotics: Science and Systems},
-  year={2025},
-}
-```
