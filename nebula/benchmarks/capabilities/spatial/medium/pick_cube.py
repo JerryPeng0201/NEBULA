@@ -56,7 +56,7 @@ class SpatialMediumPickCubeEnv(BaseEnv):
         }
         # Available containers (removed pitcher as it can't hold objects well)
         self.ycb_containers = {
-            "bowl": "024_bowl",å
+            "bowl": "024_bowl"
         }
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
 
