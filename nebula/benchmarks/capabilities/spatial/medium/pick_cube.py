@@ -54,7 +54,7 @@ class SpatialMediumPickCubeEnv(BaseEnv):
             "blue": [0, 0, 1, 1],
             "yellow": [1, 1, 0, 1],
         }
-        # Available containers (removed pitcher as it can't hold objects well)
+        # Available containers
         self.ycb_containers = {
             "bowl": "024_bowl"
         }
