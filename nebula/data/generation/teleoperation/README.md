@@ -2,9 +2,12 @@
 
 ## Overview: Teleoperation with Dockerized Motion Planning
 
+![teleop_banner](/figures/teleop_banner.png)
+
 Nebula teleoperation provides an intuitive click-and-drag interface, powered by the Sapien engine, for efficient data collection. The system leverages **gRPC** to expose the Ubuntu-exclusive **mplib** motion planner as a remote service. By running mplib inside a Docker container on Ubuntu, users can connect and interact with the planner from their local machine (macOS or Ubuntu) via gRPC, enabling cross-platform teleoperation.
 
 **Key Features:**
+
 - Use Nebula teleoperation on both Ubuntu and macOS.
 - The motion planner (mplib) runs remotely in Docker and integrates seamlessly with Nebula agents.
 - Each robot can have its own remote planner service (currently implemented for Panda robots).
@@ -12,27 +15,20 @@ Nebula teleoperation provides an intuitive click-and-drag interface, powered by 
 For practical integration examples, see [`remote_motionplanner.py`](panda/remote_motionplanner.py). The [protos](panda/protos) directory contains gRPC protocol definitions, and [server.py](panda/server.py) provides the server implementation.
 
 ---
+
 ## Instructions
+
 ### 1. Install Dependencies
 
-1. Ensure **conda** (Anaconda or Miniconda) and **git** are installed. Create and activate a conda environment:
-  ```bash
-  conda create -n nebula python=3.10
-  conda activate nebula
-  python -m pip install --upgrade pip
-  ```
-
-2. With the **nebula** environment activated, install the required dependencies. If you are using macOS, refer to the [Vulkan macOS installation guide](https://maniskill.readthedocs.io/en/latest/user_guide/getting_started/macos_install.html) for platform-specific steps.
-  ```bash
-  pip install --upgrade mani_skill torch
-  ```
-
-3. Install `pinocchio`:
+1. Ensure **conda** (Anaconda or Miniconda) and **git** are installed on your system.
+2. Create and activate a `nebula` conda environment. Refer to the [📦 Installation](/README.md#-installation) section for detailed steps.
+3. With the `nebula` environment activated, install all required dependencies before proceeding with the following instructions.
+4. If you are using macOS, refer to the [Vulkan macOS installation guide](https://maniskill.readthedocs.io/en/latest/user_guide/getting_started/macos_install.html) for platform-specific steps.
+5. Install `pinocchio` (macOS):
   ```bash
   conda install pinocchio -c conda-forge
   ```
-
-4. Install `gRPC`:
+6. Install `gRPC`:
   ```bash
   pip install grpcio grpcio-tools
   ```
@@ -41,9 +37,10 @@ Use the **nebula** environment for all subsequent operations.
 
 ---
 
-### 2. Build the Docker Image for **mplib** Motion Planning Service
+### 2. Build the Docker Image for **mplib** Motion Planning Service (macOS) 
 
 1. Navigate to the Nebula directory:
+
   ```bash
   cd Nebula-ALPHA
   ```
@@ -51,11 +48,13 @@ Use the **nebula** environment for all subsequent operations.
 2. For macOS (Apple Silicon or Intel):
 
   **Build the image (amd64 emulation on Apple Silicon):**
+
   ```bash
   docker build --platform=linux/amd64 -t mplib-grpc-panda:amd64 ./nebula/data/generation/teleoperation/panda
   ```
 
   **Run the container:**
+
   ```bash
   docker run --platform=linux/amd64 --rm -p 50051:50051 -v $(pwd)/nebula/assets:/app/assets mplib-grpc-panda:amd64
   ```
@@ -67,11 +66,14 @@ Use the **nebula** environment for all subsequent operations.
 **For macOS, in another terminal**, set environment variables and start data collection:
 
 - For macOS (Apple Silicon or Intel):
+
   ```bash
   export MPLIB_GRPC_ADDR=localhost:50051
   python -m nebula.data.generation.teleoperation.panda.interactive -e Control-PegInsertionSide-Medium --save-video --subtask-idx 3 --task_instruction="Pick up a orange-white peg and insert the orange end into the box with a hole in it." --use-remote
   ```
+
 - For Ubuntu:
+
   ```bash
   python -m nebula.data.generation.teleoperation.panda.interactive -e Control-PegInsertionSide-Medium --save-video --subtask-idx 3 --task_instruction="Pick up a orange-white peg and insert the orange end into the box with a hole in it."
   ```
@@ -83,6 +85,7 @@ python -m nebula.data.generation.teleoperation.panda.interactive -h
 ```
 
 **Workflow:**
+
 1. Review task instructions in `nebula/benchmarks/capabilities/*`.
 2. Start the data collection script.
 3. Use the click-and-drag interface and keyboard controls to operate the robot.
@@ -93,7 +96,8 @@ python -m nebula.data.generation.teleoperation.panda.interactive -h
 **Note:** The `--subtask-idx` argument organizes collected data into separate subfolders for each session.
 
 **Keyboard Commands:**
-```
+
+```bash
 h: print help menu
 g: toggle gripper open/close
 t: print task instruction
