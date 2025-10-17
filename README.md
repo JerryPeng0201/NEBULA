@@ -163,6 +163,8 @@ These plots include:
 - Bar plots (stress breakdown)
 - Composite metrics (e.g., stability, latency, Hz)
 
+Plase refer to [model visualization document](/nebula/visualization/README.md) for specification.
+
 ### 🎥 Simulation Video Examples
 
 Visual examples of NEBULA tasks across various skills and difficulty levels:
@@ -173,7 +175,7 @@ Visual examples of NEBULA tasks across various skills and difficulty levels:
       <img src="./figures/Dynamic-PressSwitch-Easy.gif" width="175" style="display: block;">
     </td>
     <td style="border: none; padding: 0; margin: 0;">
-      <img src="./figures/Perception-PlaceDiffCubes-Medium.gif" width="175" style="display: block;">
+      <img src="./figures/Perception-PickDiffCubes-Medium.gif" width="175" style="display: block;">
     </td>
     <td style="border: none; padding: 0; margin: 0;">
       <img src="./figures/Control-StackCube-Hard.gif" width="175" style="display: block;">

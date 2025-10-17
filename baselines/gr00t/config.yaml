@@ -3,9 +3,9 @@ experiment:
   dataset_root: "/home/yanyan/mnt_yanyan_hpc_nebula_alpha"
   save_dir: "/HDD1/embodied_ai/open_source_test/gr00t/gr00t_json_results"
   random_seed: 0
-  num_traj: 2
+  num_traj: 1
   max_episode_steps: 400
-  base_seed: 20241201
+  base_seed: 20251015
 
 # Model Configuration
 model:
@@ -38,21 +38,15 @@ tasks:
     - "Perception-PickBiggerSphere-Easy"
     - "Perception-PickRedSphere-Easy"
     - "Perception-PickSphere-Easy"
-    - "Perception-PlaceRedT-Medium"
-    - "Perception-PlaceDiffCubes-Medium"
-    - "Perception-PlaceWhitePeg-Medium"
-    - "Perception-PlaceRedT-Hard"
-    - "Perception-PlaceRightCubes-Hard"
-    - "Perception-PlacePeg-Hard"
-    - "Language-PickCube-Easy"
-    - "Language-GrabBlock-Easy"
-    - "Language-PlaceCube-Easy"
-    - "Language-PickCube-Medium"
-    - "Language-GrabBlock-Medium"
-    - "Language-PlaceCube-Medium"
-    - "Language-ConditionalPick-Hard"
-    - "Language-SequentialPlace-Hard"
-    - "Language-ReferenceSelect-Hard"
+    - "Perception-PickRedT-Medium"
+    - "Perception-PickDiffCubes-Medium"
+    - "Perception-PickWhitePeg-Medium"
+    - "Perception-PickRedT-Hard"
+    - "Perception-PickRightCubes-Hard"
+    - "Perception-PickPeg-Hard"
+    - "Language-Straight-Easy"
+    - "Language-Negation-Medium"
+    - "Language-Condition-Hard"
     - "Spatial-PlaceBetween-Easy"
     - "Spatial-MoveCube-Easy"
     - "Spatial-PickCube-Easy"
@@ -63,13 +57,13 @@ tasks:
     - "Spatial-KitchenAssembly-Hard"
     - "Spatial-PickCube-Hard"
     - "Dynamic-PressSwitch-Easy"
-    - "Dynamic-ColorSwitchPickCube-Easy"
-    - "Dynamic-ShapeSwitchPickCube-Easy"
+    - "Dynamic-ColorSwitchPick-Easy"
+    - "Dynamic-ShapeSwitchPick-Easy"
     - "Dynamic-PlaceRollingSphere-Medium"
     - "Dynamic-PickCubeWithCollision-Medium"
     - "Dynamic-PickCubeWithSliding-Medium"
-    - "Dynamic-RollBallWithDistraction-Hard"
-    - "Dynamic-PlaceRollingSphere-Hard"
+    - "Dynamic-DistractorBallPickCube-Hard"
+    - "Dynamic-CatchRollingSphere-Hard"
     - "Dynamic-RollBall-Hard"
     - "Robust-PlaceSphere-Easy"
     - "Robust-PushCube-Easy"

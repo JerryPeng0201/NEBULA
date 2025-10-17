@@ -14,7 +14,6 @@ from PIL import Image
 import transformers
 
 from data.filelock import FileLock
-# from data.hdf5_maniskill_dataset import HDF5VLADataset
 from data.hdf5_nebula_dataset import HDF5VLADataset
 from train.image_corrupt import image_corrupt
 

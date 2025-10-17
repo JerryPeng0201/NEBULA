@@ -72,8 +72,8 @@ class DynamicHardCatchRollingSphereEnv(BaseEnv):
     max_rolling_speed = 0.05  # Reduced from 0.25 to make sphere move slowly
     LIGHT_ACTIVATION_STEPS = 25  # Light turns green after 50 steps
 
-    LIGHT_BULB_OFF_PATH = "./nebula/utils/building/assets/light_bulb/light_bulb_off.glb"
-    LIGHT_BULB_GREEN_PATH = "./nebula/utils/building/assets/light_bulb/light_bulb_green.glb"
+    LIGHT_BULB_OFF_PATH = "../../nebula/utils/building/assets/light_bulb/light_bulb_off.glb"
+    LIGHT_BULB_GREEN_PATH = "../../nebula/utils/building/assets/light_bulb/light_bulb_green.glb"
 
     def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, **kwargs):
         self.robot_init_qpos_noise = robot_init_qpos_noise

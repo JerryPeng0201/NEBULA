@@ -513,13 +513,13 @@ class HDF5LeRobotDataset(LeRobotSingleDataset):
             "Perception-PickRedSphere-Easy": "Place the red sphere into the bin",
             "Perception-PickSphere-Easy": "Place the sphere into the bin",
 
-            "Perception-PlaceDiffCubes-Medium": "Place the cube that has different sizes into the bin",
-            "Perception-PlaceRedT-Medium": "Place the red 'T' into the bin",
-            "Perception-PlaceWhitePeg-Medium": "Place the peg that has white color into the bin",
+            "Perception-PickDiffCubes-Medium": "Place the cube that has different sizes into the bin",
+            "Perception-PickRedT-Medium": "Place the red 'T' into the bin",
+            "Perception-PickWhitePeg-Medium": "Place the peg that has white color into the bin",
 
-            "Perception-PlacePeg-Hard": "Place the peg that has red color at the middle into the bin",
-            "Perception-PlaceRedT-Hard": "Place the red 'T' into the bin",
-            "Perception-PlaceRightCubes-Hard": "Place the cube that can fit the bin into the bin",
+            "Perception-PickPeg-Hard": "Place the peg that has red color at the middle into the bin",
+            "Perception-PickRedT-Hard": "Place the red 'T' into the bin",
+            "Perception-PickRightCubes-Hard": "Place the cube that can fit the bin into the bin",
 
             # ===== Language Tasks =====
             "LanguageEasy-GrabBlock": "Grab the red block",

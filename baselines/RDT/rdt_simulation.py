@@ -39,12 +39,12 @@ TASK_DESCRIPTIONS = {
     "Perception-PickBiggerSphere-Easy": "Place the bigger sphere into the bin",
     "Perception-PickRedSphere-Easy": "Place the red sphere into the bin",
     "Perception-PickSphere-Easy": "Place the sphere into the bin",
-    "Perception-PlaceRedT-Medium": "Place the red 'T' into the bin",
-    "Perception-PlaceDiffCubes-Medium": "Place the cube that has different size into the bin",
-    "Perception-PlaceWhitePeg-Medium": "Place the peg that has white color into the bin",
-    "Perception-PlaceRedT-Hard": "Place the red 'T' into the bin",
-    "Perception-PlaceRightCubes-Hard": "Place the cube that can fit the bin into the bin",
-    "Perception-PlacePeg-Hard": "Place the peg that has red color at the middle into the bin",
+    "Perception-PickRedT-Medium": "Place the red 'T' into the bin",
+    "Perception-PickDiffCubes-Medium": "Place the cube that has different size into the bin",
+    "Perception-PickWhitePeg-Medium": "Place the peg that has white color into the bin",
+    "Perception-PickRedT-Hard": "Place the red 'T' into the bin",
+    "Perception-PickRightCubes-Hard": "Place the cube that can fit the bin into the bin",
+    "Perception-PickPeg-Hard": "Place the peg that has red color at the middle into the bin",
     
     # spatial reasoning tasks
     "Spatial-PlaceBetween-Easy": "Place the red cube between the blue and green cube",
@@ -53,13 +53,13 @@ TASK_DESCRIPTIONS = {
     
     # dynamic tasks
     "Dynamic-PressSwitch-Easy": "Only press the switch after the light turns red",
-    "Dynamic-ColorSwitchPickCube-Easy": "Pick up the red cube",
-    "Dynamic-ShapeSwitchPickCube-Easy": "Pick up the cube",
+    "Dynamic-ColorSwitchPick-Easy": "Pick up the red cube",
+    "Dynamic-ShapeSwitchPick-Easy": "Pick up the cube",
     "Dynamic-PlaceRollingSphere-Medium": "Place the sphere into the bin",
     "Dynamic-PickCubeWithCollision-Medium": "Pick up the cube",
     "Dynamic-PickCubeWithSliding-Medium": "Pick up the cube",
-    "Dynamic-RollBallWithDistraction-Hard": "Roll the ball to the target region",
-    "Dynamic-PlaceRollingSphere-Hard": "Place the rolling sphere into the shallow bin, but only when the light turns green",
+    "Dynamic-DistractorBallPickCube-Hard": "Roll the ball to the target region",
+    "Dynamic-CatchRollingSphere-Hard": "Place the rolling sphere into the shallow bin, but only when the light turns green",
     
     # robust tasks
     "Robust-PlaceSphere-Easy": "Pick up the blue sphere and place it into the purple bin, and then place it into the blue bin",
@@ -371,8 +371,8 @@ def evaluate_task(env_id, policy, config):
         'avg_inference_frequency_hz': float(1.0 / np.mean(inference_times)),
         'avg_latency_ms': float(np.mean(inference_times) * 1000),
         'avg_stability_score': float(np.mean(stability_scores)),
-        'avg_gpu_memory_peak_mb': float(np.mean([r['gpu_memory_peak'] for r in results])),
-        'avg_cpu_memory_peak_mb': float(np.mean([r['cpu_memory_peak'] for r in results])),
+        'avg_gpu_memory_peak': float(np.mean([r['gpu_memory_peak'] for r in results])),
+        'avg_cpu_memory_peak': float(np.mean([r['cpu_memory_peak'] for r in results])),
         'num_trajectories': config['experiment']['num_traj'],
         'episodes': results
     }
@@ -433,8 +433,8 @@ def generate_conclusion(config, test_type):
         all_inference_freqs.append(task_result['avg_inference_frequency_hz'])
         all_latencies.append(task_result['avg_latency_ms'])
         all_stabilities.append(task_result['avg_stability_score'])
-        all_gpu_peaks.append(task_result['gpu_memory_peak'])
-        all_cpu_peaks.append(task_result['cpu_memory_peak'])
+        all_gpu_peaks.append(task_result['avg_gpu_memory_peak'])
+        all_cpu_peaks.append(task_result['avg_cpu_memory_peak'])
         
         parts = task_name.split('-')
         if len(parts) >= 2:

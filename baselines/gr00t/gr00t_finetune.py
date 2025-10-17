@@ -52,8 +52,8 @@ class ArgsConfig:
         "Control-PegInsertionSide-Medium", "Control-PlaceSphere-Medium", "Control-StackCube-Medium", 
         "Control-PlaceSphere-Hard", "Control-StackCube-Hard", 
         "Perception-PickBiggerSphere-Easy", "Perception-PickRedSphere-Easy", "Perception-PickSphere-Easy", 
-        "Perception-PlaceDiffCubes-Medium", "Perception-PlaceRedT-Medium", "Perception-PlaceWhitePeg-Medium", 
-        "Perception-PlacePeg-Hard", "Perception-PlaceRedT-Hard", "Perception-PlaceRightCubes-Hard", 
+        "Perception-PickDiffCubes-Medium", "Perception-PickRedT-Medium", "Perception-PickWhitePeg-Medium", 
+        "Perception-PickPeg-Hard", "Perception-PickRedT-Hard", "Perception-PickRightCubes-Hard", 
         "DynamicEasy-PressSwitch", "DynamicMedium-PickSlidingCube", "DynamicHard-ColorSwitchPickCube", "DynamicHard-ShapeSwitchPickCube",
         "SpatialEasy-MoveCube", "SpatialEasy-PickCube"])  # Will auto-discover if None
     """List of task names to include. If None, will use all tasks in dataset_root."""

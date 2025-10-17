@@ -3,7 +3,6 @@ import numpy as np
 import sapien
 import torch
 from transforms3d.euler import euler2quat
-
 from nebula.core.embodiment.robots import Fetch, Panda
 from nebula.core.simulation.engine import BaseEnv
 from nebula.core.simulation.utils import randomization
@@ -52,10 +51,10 @@ class DynamicPressLightSwitchEnv(BaseEnv):
     SWITCH_PRESS_THRESHOLD = 0.05  # Distance threshold for switch activation
     SWITCH_SIZE = 0.01  # Half-size of switch cube
 
-    LIGHT_BULB_OFF_PATH = "./nebula/utils/building/assets/light_bulb/light_bulb_off.glb"
-    LIGHT_BULB_RED_PATH = "./nebula/utils/building/assets/light_bulb/light_bulb_red.glb"
-    LIGHT_BULB_GREEN_PATH = "./nebula/utils/building/assets/light_bulb/light_bulb_green.glb"
-    BUTTON_PATH = "./nebula/utils/building/assets/light_bulb/button.glb"
+    LIGHT_BULB_OFF_PATH = "../../nebula/utils/building/assets/light_bulb/light_bulb_off.glb"
+    LIGHT_BULB_RED_PATH = "../../nebula/utils/building/assets/light_bulb/light_bulb_red.glb"
+    LIGHT_BULB_GREEN_PATH = "../../nebula/utils/building/assets/light_bulb/light_bulb_green.glb"
+    BUTTON_PATH = "../../nebula/utils/building/assets/light_bulb/button.glb"
 
     def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, **kwargs):
         self.robot_init_qpos_noise = robot_init_qpos_noise

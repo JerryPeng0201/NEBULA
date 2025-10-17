@@ -204,7 +204,7 @@ class LanguageNegationMediumEnv(BaseEnv):
 
             # Randomly select a language command from templates
             self.task_instruction = random.choice(self.command_templates)
-            print(f"Language Command: '{self.task_instruction}'")
+            # print(f"Language Command: '{self.task_instruction}'")
 
             # init the objects at fixed positions
             xyz = torch.zeros((b, 3))

@@ -1,4 +1,3 @@
-# ManiSkill Asset Management
+# Nebula Asset Management
 
-Code for asset management in ManiSkill
-
+Adapted from maniskill Asset Management: https://github.com/haosulab/ManiSkill/tree/main/mani_skill/utils/assets
