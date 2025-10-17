@@ -277,7 +277,13 @@ def evaluate_task(env_id, policy, config):
         video_dir.mkdir(parents=True, exist_ok=True)
     
     results = []
-    for episode in tqdm(range(config['experiment']['num_traj']), 
+    num_traj = config['experiment']['num_traj']
+    
+    # language tasks
+    if "Language" in env_id:
+        num_traj *= 3
+
+    for episode in tqdm(range(num_traj), 
                        desc=f"Evaluating {env_id}", 
                        leave=False):
         episode_result = run_episode(env, policy, env_id, config, episode, 
@@ -412,7 +418,7 @@ def generate_conclusion(config, test_type):
     print(f"Average GPU Memory Peak: {summary['overall_metrics']['average_gpu_memory_peak']:.2f} MB")
     print(f"Average CPU Memory Peak: {summary['overall_metrics']['average_cpu_memory_peak']:.2f} MB")
 
-def save_task_result(task_result, config, param_info, baseline_info=None, is_first_task=False, test_type='all'):
+def save_task_result(task_result, config, param_info, baseline_info=None, test_type='all'):
     """Save task result to JSON file."""
     output_dir = Path(config['experiment']['save_dir'])
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -435,11 +441,9 @@ def save_task_result(task_result, config, param_info, baseline_info=None, is_fir
                 'trainable': param_info['trainable'],
                 'non_trainable': param_info['non_trainable']
             },
+            'baseline_memory': baseline_info,
             'results': []
         }
-        
-        if baseline_info is not None:
-            results_data['baseline_memory'] = make_json_serializable(baseline_info)
     
     serializable_task_result = make_json_serializable(task_result)
     results_data['results'].append(serializable_task_result)
@@ -473,9 +477,8 @@ def main():
     if torch.cuda.is_available():
         torch.cuda.synchronize()
         baseline_info = {
-            'gpu_allocated_mb': torch.cuda.memory_allocated() / 1024**2,
-            'gpu_reserved_mb': torch.cuda.memory_reserved() / 1024**2,
-            'timestamp': datetime.now().isoformat()
+            'gpu_allocated': torch.cuda.memory_allocated() / 1024**2,
+            'gpu_reserved': torch.cuda.memory_reserved() / 1024**2,
         }
     
     if args.tasks:
@@ -491,7 +494,6 @@ def main():
         result = evaluate_task(task, policy, config)
         save_task_result(result, config, param_info, 
                          baseline_info=baseline_info if idx == 0 else None,
-                         is_first_task=(idx == 0), 
                          test_type=args.test_type)
 
     generate_conclusion(config, args.test_type)
