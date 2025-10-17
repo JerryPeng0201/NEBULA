@@ -161,8 +161,7 @@ class PDEEPosControllerConfig(ControllerConfig):
         "body_translation",
         "root_translation",
     ] = "root_translation"
-    """Choice of frame to use for translational and rotational control of the end-effector. To learn how these work explicitly
-    with videos of each one's behavior see https://maniskill.readthedocs.io/en/latest/user_guide/concepts/controllers.html#pd-ee-end-effector-pose"""
+    """Choice of frame to use for translational and rotational control of the end-effector. """
     root_link_name: Optional[str] = None
     """Optionally set different root link for root translation control (e.g. if root is different than base)"""
     use_delta: bool = True
@@ -268,8 +267,7 @@ class CartesianImpedanceControllerConfig(PDEEPosControllerConfig):
         "body_translation:body_aligned_body_rotation",
         "root_translation:body_aligned_body_rotation",
     ] = "root_translation:root_aligned_body_rotation"
-    """Choice of frame to use for translational and rotational control of the end-effector. To learn how these work explicitly
-    with videos of each one's behavior see https://maniskill.readthedocs.io/en/latest/user_guide/concepts/controllers.html#pd-ee-end-effector-pose"""
+    """Choice of frame to use for translational and rotational control of the end-effector."""
 
     controller_cls = CartesianImpedanceController
 

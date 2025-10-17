@@ -17,7 +17,7 @@ REGISTERED_SCENE_BUILDERS: Dict[str, SceneBuilderSpec] = {}
 
 
 def register_scene_builder(uid: str, override=False):
-    """A decorator to register scene builders into ManiSkill so they can be used easily by string uid.
+    """A decorator to register scene builders into NEBULA so they can be used easily by string uid.
 
     Args:
         uid (str): unique id of the scene builder class.

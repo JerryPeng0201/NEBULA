@@ -1,6 +1,6 @@
-# ManiSkill Utilities
+# NEBULA Utilities
 
-These are various functions/tooling that help make it easy for ManiSkill to work, as well as build your own tasks, train on them, and evaluate on them.
+These are various functions/tooling that help make it easy for NEBULA to work, as well as build your own tasks, train on them, and evaluate on them.
 
 Description of the main modules are as follows:
 

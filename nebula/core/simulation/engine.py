@@ -46,7 +46,7 @@ from nebula.tools.viewer import create_viewer
 
 
 class BaseEnv(gym.Env):
-    """Superclass for ManiSkill environments.
+    """Superclass for NEBULA environments.
 
     Args:
         num_envs: number of parallel environments to run. By default this is 1, which means a CPU simulation is used. If greater than 1,
@@ -218,7 +218,7 @@ class BaseEnv(gym.Env):
         self.reconfiguration_freq = reconfiguration_freq if reconfiguration_freq is not None else 0
         self._reconfig_counter = 0
         if shader_dir is not None:
-            logger.warn("shader_dir argument will be deprecated after ManiSkill v3.0.0 official release. Please use sensor_configs/human_render_camera_configs to set shaders.")
+            logger.warn("shader_dir argument will be deprecated after NEBULA official release. Please use sensor_configs/human_render_camera_configs to set shaders.")
             sensor_configs |= dict(shader_pack=shader_dir)
             human_render_camera_configs |= dict(shader_pack=shader_dir)
             viewer_camera_configs |= dict(shader_pack=shader_dir)
@@ -345,7 +345,7 @@ class BaseEnv(gym.Env):
         .. code-block:: python
 
             import gymnasium as gym
-            from mani_skill.envs.sapien_env import BaseEnv
+            from nebula.envs.sapien_env import BaseEnv
             class YourObservationWrapper(gym.ObservationWrapper):
                 def __init__(self, env):
                     super().__init__(env)
@@ -856,7 +856,7 @@ class BaseEnv(gym.Env):
     # Reset
     # -------------------------------------------------------------------------- #
     def reset(self, seed: Union[None, int, list[int]] = None, options: Union[None, dict] = None):
-        """Reset the ManiSkill environment with given seed(s) and options. Typically seed is either None (for unseeded reset) or an int (seeded reset).
+        """Reset the NEBULA environment with given seed(s) and options. Typically seed is either None (for unseeded reset) or an int (seeded reset).
         For GPU parallelized environments you can also pass a list of seeds for each parallel environment to seed each one separately.
 
         If options["env_idx"] is given, will only reset the selected parallel environments. If
@@ -875,12 +875,11 @@ class BaseEnv(gym.Env):
 
 
 
-        Note that ManiSkill always holds two RNG states, a main RNG, and an episode RNG. The main RNG is used purely to sample an episode seed which
+        Note that NEBULA always holds two RNG states, a main RNG, and an episode RNG. The main RNG is used purely to sample an episode seed which
         helps with reproducibility of episodes and is for internal use only. The episode RNG is used by the environment/task itself to
         e.g. randomize object positions, randomize assets etc. Episode RNG is accessible by using `self._batched_episode_rng` which is numpy based and `torch.rand`
         which can be used to generate random data on the GPU directly and is seeded. Note that it is recommended to use `self._batched_episode_rng`
-        if you need to ensure during reconfiguration the same objects are loaded. Reproducibility and seeding when there is GPU and CPU simulation can be tricky and we recommend reading
-        the documentation for more recommendations and details on RNG https://maniskill.readthedocs.io/en/latest/user_guide/concepts/rng.html
+        if you need to ensure during reconfiguration the same objects are loaded. 
 
         Upon environment creation via gym.make, the main RNG is set with fixed seeds of 2022 to 2022 + num_envs - 1 (seed is just 2022 if there is only one environment)
         During each reset call, if seed is None, main RNG is unchanged and an episode seed is sampled from the main RNG to create the episode RNG.
@@ -936,7 +935,7 @@ class BaseEnv(gym.Env):
                 self._initialize_episode(env_idx, options)
         else:
             self._initialize_episode(env_idx, options)
-        # reset the reset mask back to all ones so any internal code in maniskill can continue to manipulate all scenes at once as usual
+        # reset the reset mask back to all ones so any internal code in nebula can continue to manipulate all scenes at once as usual
         self.scene._reset_mask = torch.ones(
             self.num_envs, dtype=bool, device=self.device
         )
@@ -965,7 +964,7 @@ class BaseEnv(gym.Env):
 
         Note that while _set_main_rng and _set_episode_rng are setting a seed and numpy random state, when using GPU sim
         parallelization it is highly recommended to use torch random functions as they will make things run faster. The use
-        of torch random functions when building tasks in ManiSkill are automatically seeded via `torch.random.fork`
+        of torch random functions when building tasks in NEBULA are automatically seeded via `torch.random.fork`
         """
         if seed is None:
             if self._main_seed is not None:

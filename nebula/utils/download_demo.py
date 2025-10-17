@@ -98,7 +98,7 @@ def parse_args(args=None):
         "-o",
         "--output_dir",
         type=str,
-        help="The directory to save demonstrations to. The files will then be saved to <output_dir>/<env_type>/<env_id>. By default it is saved to ~/.maniskill/demos or what MS_ASSET_DIR is set to.",
+        help="The directory to save demonstrations to. The files will then be saved to <output_dir>/<env_type>/<env_id>. By default it is saved to ~/.nebula/demos or what MS_ASSET_DIR is set to.",
     )
     return parser.parse_args(args)
 

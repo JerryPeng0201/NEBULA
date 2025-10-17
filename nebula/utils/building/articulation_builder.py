@@ -59,7 +59,7 @@ class ArticulationBuilder(SapienArticulationBuilder):
 
     def build_entities(self, *args, **kwargs):
         raise NotImplementedError(
-            "_build_entities is a private function in ManiSkill. Use build() to properly build articulation"
+            "_build_entities is a private function in NEBULA. Use build() to properly build articulation"
         )
 
     def _build_entities(
@@ -121,7 +121,7 @@ class ArticulationBuilder(SapienArticulationBuilder):
             self.name is not None
             and self.name != ""
             and self.name not in self.scene.articulations
-        ), "built actors in ManiSkill must have unique names and cannot be None or empty strings"
+        ), "built actors in NEBULA must have unique names and cannot be None or empty strings"
 
         if self.scene_idxs is not None:
             pass

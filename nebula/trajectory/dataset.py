@@ -20,9 +20,9 @@ def load_h5_data(data):
     return out
 
 
-class ManiSkillTrajectoryDataset(Dataset):
+class NEBULATrajectoryDataset(Dataset):
     """
-    A general torch Dataset you can drop in and use immediately with just about any trajectory .h5 data generated from ManiSkill.
+    A general torch Dataset you can drop in and use immediately with just about any trajectory .h5 data generated from NEBULA.
     This class simply is a simple starter code to load trajectory data easily, but does not do any data transformation or anything
     advanced. We recommend you to copy this code directly and modify it for more advanced use cases
 

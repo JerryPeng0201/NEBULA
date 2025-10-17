@@ -37,7 +37,6 @@ class ControlPlaceSphereHardEnv(BaseEnv):
     - The gripper must be open (not grasping) at each placement
     """
 
-    _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/PlaceSphere-v1_rt.mp4"
     SUPPORTED_ROBOTS = ["panda", "fetch"]
 
     # Specify some supported robot types

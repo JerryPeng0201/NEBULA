@@ -222,7 +222,7 @@ class DynamicMediumPickCubeWithCollisionEnv(BaseEnv):
             }
 
     def step(self, action):
-        # Execute standard ManiSkill step
+        # Execute standard NEBULA step
         obs, reward, terminated, truncated, info = super().step(action)
         
         # Update step counter

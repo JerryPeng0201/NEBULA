@@ -1,4 +1,4 @@
-"""Replay ManiSkill trajectories stored in HDF5 (.h5) format
+"""Replay NEBULA trajectories stored in HDF5 (.h5) format
 
 The replayed trajectory can use different observation modes and control modes.
 
@@ -38,8 +38,7 @@ class Args:
     sim_backend: Annotated[Optional[str], tyro.conf.arg(aliases=["-b"])] = None
     """Which simulation backend to use. Can be 'physx_cpu', 'physx_gpu'. If not specified the backend used is the same as the one used to collect the trajectory data."""
     obs_mode: Annotated[Optional[str], tyro.conf.arg(aliases=["-o"])] = None
-    """Target observation mode to record in the trajectory. See
-    https://maniskill.readthedocs.io/en/latest/user_guide/concepts/observation.html for a full list of supported observation modes."""
+    """Target observation mode to record in the trajectory."""
     target_control_mode: Annotated[Optional[str], tyro.conf.arg(aliases=["-c"])] = None
     """Target control mode to convert the demonstration actions to.
     Note that not all control modes can be converted to others successfully and not all robots have easy to convert control modes.
@@ -402,7 +401,7 @@ def _main(
     env = gym.make(env_id, **env_kwargs)
     if isinstance(env.action_space, gym.spaces.Dict):
         logger.warning(
-            "We currently do not track which wrappers are used when recording trajectories but majority of the time in multi-agent envs with dictionary action spaces the actions are stored as flat vectors. We will flatten the action space with the ManiSkill provided FlattenActionSpaceWrapper. If you do not want this behavior you can copy the replay trajectory code yourself and modify it as needed."
+            "We currently do not track which wrappers are used when recording trajectories but majority of the time in multi-agent envs with dictionary action spaces the actions are stored as flat vectors. We will flatten the action space with the NEBULA provided FlattenActionSpaceWrapper. If you do not want this behavior you can copy the replay trajectory code yourself and modify it as needed."
         )
         env = FlattenActionSpaceWrapper(env)
     # TODO (support adding wrappers to the recorded data?)
@@ -417,7 +416,7 @@ def _main(
 
     ### Prepare for recording ###
 
-    # note for maniskill trajectory datasets the general naming format is <trajectory_name>.<obs_mode>.<control_mode>.<sim_backend>.h5
+    # note for nebula trajectory datasets the general naming format is <trajectory_name>.<obs_mode>.<control_mode>.<sim_backend>.h5
     # If it is called <file_name>.h5 then we assume obs_mode=None, control_mode=pd_joint_pos, and sim_backend=physx_cpu
     output_dir = os.path.dirname(traj_path)
     ori_traj_name = os.path.splitext(os.path.basename(traj_path))[0]

@@ -319,7 +319,7 @@ class Articulation(BaseStruct[physx.PhysxArticulation]):
 
     # currently does not work in SAPIEN. Must set collision groups prior to building Link
     # def disable_self_collisions(self):
-    #     """Disable all self collisions between links. Note that 1 << 31 is reserved in the entirety of ManiSkill for link self collisions"""
+    #     """Disable all self collisions between links. Note that 1 << 31 is reserved in the entirety of NEBULA for link self collisions"""
     #     for link in self.links:
     #         for obj in link._objs:
     #             for s in obj.get_collision_shapes():
@@ -612,7 +612,7 @@ class Articulation(BaseStruct[physx.PhysxArticulation]):
         return self.qf
 
     # def get_qlimit(self):
-    # removed this function from ManiSkill Articulation wrapper API as it is redundant
+    # removed this function from NEBULA Articulation wrapper API as it is redundant
     #     """
     #     same as get_qlimits
     #     """

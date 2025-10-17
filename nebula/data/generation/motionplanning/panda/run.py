@@ -61,7 +61,7 @@ def _main(args, proc_id: int = 0, start_seed: int = 0) -> str:
         output_dir=osp.join(args.record_dir, env_id, "motionplanning"),
         trajectory_name=new_traj_name, save_video=args.save_video,
         source_type="motionplanning",
-        source_desc="official motion planning solution from ManiSkill contributors",
+        source_desc="official motion planning solution from NEBULA contributors",
         task_name=env_id,   # TODO: change to the actual task name
         subtask_idx=args.subtask_idx,
         video_fps=30,

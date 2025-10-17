@@ -20,4 +20,4 @@ There are still some small issues with the provided URDF from Inspire Robotics. 
 - Some other joints might move by a little bit (up to 0.001 radian change) when another joint moves. Also likely due to physx issues.
 ### Simulation
 
-It is unclear why but for the physx backends a damping of 0.001 (or some small value) needed to be set on the mimic joints for them to simulate stably. This is done at the controller level at the moment in ManiSkill.
+It is unclear why but for the physx backends a damping of 0.001 (or some small value) needed to be set on the mimic joints for them to simulate stably. This is done at the controller level at the moment in NEBULA.

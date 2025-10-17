@@ -69,7 +69,7 @@ class Kinematics:
 
         # NOTE (arth): some robots, like Fetch, have dummy joints that can mess with IK solver.
         #   we assume that the urdf_path provides a valid kinematic chain, and prune joints
-        #   which are in the ManiSkill articulation but not in the kinematic chain
+        #   which are in the NEBULA articulation but not in the kinematic chain
         with open(self.urdf_path, "r") as f:
             urdf_string = f.read()
         xml = ET.fromstring(urdf_string.encode("utf-8"))

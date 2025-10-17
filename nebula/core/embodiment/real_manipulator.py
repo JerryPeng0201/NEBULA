@@ -121,8 +121,6 @@ class BaseRealAgent:
 
         whether rgb or depth is included depends on the real camera and can be omitted if not supported or not used. Note that a batch dimension is expected in the data.
 
-        For more details see https://maniskill.readthedocs.io/en/latest/user_guide/concepts/sensors.html in order to ensure
-        the real data aligns with simulation formats.
         """
         raise NotImplementedError
 

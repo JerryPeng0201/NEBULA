@@ -28,7 +28,7 @@ def select_index_from_dict(data: Union[dict, np.ndarray], i: int):
 
 # TODO
 class ManiSkillSB3VectorEnv(SB3VecEnv):
-    """A wrapper for to make ManiSkill parallel simulation compatible with SB3 VecEnv and auto adds the monitor wrapper"""
+    """A wrapper for to make NEBULA parallel simulation compatible with SB3 VecEnv and auto adds the monitor wrapper"""
 
     def __init__(self, env: BaseEnv):
         super().__init__(

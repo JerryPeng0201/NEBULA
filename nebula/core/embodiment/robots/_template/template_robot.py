@@ -8,12 +8,12 @@ from nebula.sensors.camera import CameraConfig
 # @register_agent() # uncomment this if you want to register the agent so you can instantiate it by ID when creating environments
 class TemplateRobot(BaseAgent):
     uid = "todo-give-me-a-name!"
-    urdf_path = f"path/to/robot.urdf"  # You can use f"{PACKAGE_ASSET_DIR}" to reference a urdf file in the mani_skill /assets package folder
+    urdf_path = f"path/to/robot.urdf"  # You can use f"{PACKAGE_ASSET_DIR}" to reference a urdf file in the nebula /assets package folder
 
     # you may need to use this modify the friction values of some links in order to make it possible to e.g. grasp objects or avoid sliding on the floor
     urdf_config = dict()
 
-    # you will need to implement your controllers to control the robot here. If not implemented, ManiSkill will create two default controllers.
+    # you will need to implement your controllers to control the robot here. If not implemented, NEBULA will create two default controllers.
     # One does PD joint position control, and the other is PD joint delta position control
     # @property
     # def _controller_configs(self):

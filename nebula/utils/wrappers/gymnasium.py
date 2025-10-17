@@ -8,13 +8,13 @@ from nebula.utils import common
 
 
 class CPUGymWrapper(gym.Wrapper):
-    """This wrapper wraps any maniskill env created via gym.make to ensure the outputs of
+    """This wrapper wraps any nebula env created via gym.make to ensure the outputs of
     env.render, env.reset, env.step are all numpy arrays and are not batched.
     Essentially ensuring the environment conforms entirely to the standard gymnasium API https://gymnasium.farama.org/api/env/.
     The wrapper also optionally records standardized evaluation metrics like return and success.
 
     This wrapper should generally be applied after all other
-    wrappers as most wrappers for ManiSkill assume data returned is a batched torch tensor
+    wrappers as most wrappers for NEBULA assume data returned is a batched torch tensor
 
     Args:
         env (gym.Env): The environment to wrap.

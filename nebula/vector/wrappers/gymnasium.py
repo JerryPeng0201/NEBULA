@@ -14,9 +14,9 @@ if TYPE_CHECKING:
     from nebula.core.simulation.engine import BaseEnv
 
 
-class ManiSkillVectorEnv(VectorEnv):
+class NEBULAVectorEnv(VectorEnv):
     """
-    Gymnasium Vector Env implementation for ManiSkill environments running on the GPU for parallel simulation and optionally parallel rendering
+    Gymnasium Vector Env implementation for NEBULA environments running on the GPU for parallel simulation and optionally parallel rendering
 
     Note that currently this also assumes modeling tasks as infinite horizon (e.g. terminations is always False, only reset when timelimit is reached)
 

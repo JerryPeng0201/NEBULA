@@ -213,7 +213,7 @@ class DynamicHardRollBallEnv(BaseEnv):
 
     def _set_bouncing_ball_material(self):
         """Set physical material for realistic bouncing"""
-        # In ManiSkill, actors have collision_shapes property
+        # In NEBULA, actors have collision_shapes property
         if hasattr(self.bouncing_ball, 'collision_shapes'):
             for collision_shape in self.bouncing_ball.collision_shapes:
                 material = collision_shape.physical_material

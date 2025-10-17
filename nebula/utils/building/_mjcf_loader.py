@@ -265,7 +265,7 @@ class MJCFLoader:
         if condim == 3:
             friction = _parse_vec(
                 geom_attrib, "friction", np.array([0.3, 0.3, 0.3])
-            )  # maniskill default friction is 0.3
+            )  # NEBULA default friction is 0.3
             # NOTE (stao): we only support sliding friction at the moment. see
             # https://mujoco.readthedocs.io/en/stable/XMLreference.html#body-geom-friction
             # we might be able to imitate their torsional frictions via patch radius attributes:
@@ -396,13 +396,13 @@ class MJCFLoader:
         elif geom_type == "plane":
             if not WARNED_ONCE["plane"]:
                 logger.warn(
-                    "Currently ManiSkill does not support loading plane geometries from MJCFs"
+                    "Currently NEBULA does not support loading plane geometries from MJCFs"
                 )
                 WARNED_ONCE["plane"] = True
         elif geom_type == "ellipsoid":
             if not WARNED_ONCE["ellipsoid"]:
                 logger.warn(
-                    "Currently ManiSkill does not support loading ellipsoid geometries from MJCFs"
+                    "Currently NEBULA does not support loading ellipsoid geometries from MJCFs"
                 )
                 WARNED_ONCE["ellipsoid"] = True
         elif geom_type == "mesh":

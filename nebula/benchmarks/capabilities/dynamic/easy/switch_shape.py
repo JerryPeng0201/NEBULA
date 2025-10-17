@@ -275,7 +275,7 @@ class DynamicShapeSwitchPickEnv(BaseEnv):
             self.distractor_object = self.distractor_sphere
 
     def step(self, action):
-        # Execute standard ManiSkill step
+        # Execute standard NEBULA step
         obs, reward, terminated, truncated, info = super().step(action)
         
         # Update step counter

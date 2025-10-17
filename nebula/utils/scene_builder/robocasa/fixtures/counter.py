@@ -1,4 +1,4 @@
-"""Code ported from RoboCasa to work with ManiSkill"""
+"""Code ported from RoboCasa to work with NEBULA"""
 import math
 
 import numpy as np
@@ -157,7 +157,7 @@ class Counter(Fixture):
                         mipmap_levels=1,
                     )
                 )
-                # note (stao): maniskill/sapien doesn't have the same procedural texture repeat functionality yet so this is a hack to model the textures
+                # note: nebula/sapien doesn't have the same procedural texture repeat functionality yet so this is a hack to model the textures
                 if "top" in shortname:
                     from transforms3d.euler import euler2quat
 

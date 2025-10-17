@@ -1,4 +1,4 @@
-# ManiSkill Asset Management
+# NEBULA Asset Management
 
-Code for asset management in ManiSkill
+Code for asset management in NEBULA
 

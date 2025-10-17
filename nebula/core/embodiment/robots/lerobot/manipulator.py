@@ -23,7 +23,7 @@ except ImportError:
 
 class LeRobotRealAgent(BaseRealAgent):
     """
-    LeRobotRealAgent is a general class for controlling real robots via the LeRobot system. You simply just pass in the Robot instance you create via LeRobot and pass it here to make it work with ManiSkill Sim2Real environment interfaces.
+    LeRobotRealAgent is a general class for controlling real robots via the LeRobot system. You simply just pass in the Robot instance you create via LeRobot and pass it here to make it work with NEBULA Sim2Real environment interfaces.
 
     Args:
         robot (Robot): The Robot instance you create via LeRobot.

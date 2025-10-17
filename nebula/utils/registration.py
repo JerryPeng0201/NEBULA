@@ -13,7 +13,7 @@ from gymnasium.envs.registration import WrapperSpec
 
 from nebula import logger
 from nebula.utils import assets, download_asset
-from nebula.vector.wrappers.gymnasium import ManiSkillVectorEnv
+from nebula.vector.wrappers.gymnasium import NEBULAVectorEnv
 
 if TYPE_CHECKING:
     from nebula.core.simulation.engine import BaseEnv
@@ -28,7 +28,7 @@ class EnvSpec:
         asset_download_ids: Optional[List[str]] = [],
         default_kwargs: dict = None,
     ):
-        """A specification for a ManiSkill environment."""
+        """A specification for a NEBULA environment."""
         self.uid = uid
         self.cls = cls
         self.max_episode_steps = max_episode_steps
@@ -100,9 +100,9 @@ def register(
     asset_download_ids: List[str] = [],
     default_kwargs: dict = None,
 ):
-    """Register a ManiSkill environment."""
+    """Register a NEBULA environment."""
 
-    # hacky way to avoid circular import errors when users inherit a task in ManiSkill and try to register it themselves
+    # hacky way to avoid circular import errors when users inherit a task in NEBULA and try to register it themselves
     from nebula.core.simulation.engine import BaseEnv
 
     if name in REGISTERED_ENVS:
@@ -169,7 +169,7 @@ class TimeLimitWrapper(gym.Wrapper):
 
 
 def make(env_id, **kwargs):
-    """Instantiate a ManiSkill environment.
+    """Instantiate a NEBULA environment.
 
     Args:
         env_id (str): Environment ID.
@@ -185,7 +185,7 @@ def make(env_id, **kwargs):
 
 def make_vec(env_id, **kwargs):
     env = gym.make(env_id, **kwargs)
-    env = ManiSkillVectorEnv(env)
+    env = NEBULAVectorEnv(env)
     return env
 
 
@@ -196,7 +196,7 @@ def register_env(
     asset_download_ids: List[str] = [],
     **kwargs,
 ):
-    """A decorator to register ManiSkill environments.
+    """A decorator to register NEBULA environments.
 
     Args:
         uid (str): unique id of the environment.
@@ -229,7 +229,7 @@ def register_env(
                 logger.warn(f"Env {uid} is already registered. Skip registration.")
                 return cls
 
-        # Register for ManiSkill
+        # Register for NEBULA
         register(
             uid,
             cls,

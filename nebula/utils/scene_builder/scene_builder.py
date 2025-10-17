@@ -28,7 +28,7 @@ class SceneBuilder:
     """Initial pose of the robot (passed to load_agent)"""
 
     builds_lighting: bool = False
-    """Whether this scene builder will add its own lighting when build is called. If False, ManiSkill will add some default lighting"""
+    """Whether this scene builder will add its own lighting when build is called. If False, NEBULA will add some default lighting"""
 
     build_configs: Optional[List[Any]] = None
     """List of scene configuration information that can be used to **build** scenes during reconfiguration (i.e. `env.reset(seed=seed, options=dict(reconfigure=True))`). Can be a dictionary, a path to a json file, or some other data. If a scene needs to load build config data, it will index/sample such build configs from this list."""

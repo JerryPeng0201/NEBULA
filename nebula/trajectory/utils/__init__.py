@@ -1,5 +1,5 @@
 """
-Utils for working with ManiSkill trajectory files
+Utils for working with NEBULA trajectory files
 """
 
 

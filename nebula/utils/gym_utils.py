@@ -1,4 +1,4 @@
-"""various gymnasium/gym utilities used in ManiSkill, mostly to handle observation/action spaces and noramlization"""
+"""various gymnasium/gym utilities used in NEBULA, mostly to handle observation/action spaces and noramlization"""
 
 
 from typing import Dict
@@ -9,7 +9,7 @@ import torch
 from gymnasium import spaces
 
 from nebula.utils.logging_utils import logger
-from nebula.vector.wrappers.gymnasium import ManiSkillVectorEnv
+from nebula.vector.wrappers.gymnasium import NEBULAVectorEnv
 
 
 def find_max_episode_steps_value(env):
@@ -24,7 +24,7 @@ def find_max_episode_steps_value(env):
         raise NotImplementedError(
             "Currently cannot get max episode steps of an environment wrapped with gym.vector.AsyncVectorEnv"
         )
-    elif isinstance(cur, ManiSkillVectorEnv):
+    elif isinstance(cur, NEBULAVectorEnv):
         cur = env._env
     while cur is not None:
         try:

@@ -39,7 +39,7 @@ class ReplicaCADSceneBuilder(SceneBuilder):
         p=[-1, 0, 0.02]
     )  # generally a safe initial spawn pose for the Fetch robot
 
-    builds_lighting = True  # we set this true because the ReplicaCAD dataset defines some lighting for us so we don't need the default option from ManiSkill
+    builds_lighting = True  # we set this true because the ReplicaCAD dataset defines some lighting for us so we don't need the default option from NEBULA
 
     # build configs for RCAD are string file names
     build_configs: List[str] = None
@@ -119,7 +119,7 @@ class ReplicaCADSceneBuilder(SceneBuilder):
                 / f"scene_datasets/replica_cad_dataset/stages/{background_template_name}.glb"
             )
             builder = self.scene.create_actor_builder()
-            # Note all ReplicaCAD assets are rotated by 90 degrees as they use a different xyz convention to SAPIEN/ManiSkill.
+            # Note all ReplicaCAD assets are rotated by 90 degrees as they use a different xyz convention to SAPIEN.
             q = transforms3d.quaternions.axangle2quat(
                 np.array([1, 0, 0]), theta=np.deg2rad(90)
             )
@@ -141,7 +141,7 @@ class ReplicaCADSceneBuilder(SceneBuilder):
             for obj_num, obj_meta in enumerate(build_config_json["object_instances"]):
 
                 # Again, for any dataset you will have to figure out how they reference object files
-                # Note that ASSET_DIR will always refer to the ~/.maniskill/data folder or whatever MS_ASSET_DIR is set to
+                # Note that ASSET_DIR will always refer to the ~/.nebula/data folder or whatever MS_ASSET_DIR is set to
                 obj_config_path = osp.join(
                     ASSET_DIR,
                     "scene_datasets/replica_cad_dataset/configs/objects",

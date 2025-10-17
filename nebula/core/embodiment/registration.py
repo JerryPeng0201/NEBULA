@@ -16,7 +16,7 @@ REGISTERED_AGENTS: Dict[str, AgentSpec] = {}
 
 
 def register_agent(asset_download_ids: List[str] = [], override=False):
-    """A decorator to register agents into ManiSkill so they can be used easily by string uid.
+    """A decorator to register agents into NEBULA so they can be used easily by string uid.
 
     Args:
         uid (str): unique id of the agent.

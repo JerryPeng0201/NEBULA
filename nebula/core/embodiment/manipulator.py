@@ -47,7 +47,7 @@ class BaseAgent:
     A tutorial on how to build your own agent can be found in :doc:`its tutorial </user_guide/tutorials/custom_robots>`
 
     Args:
-        scene (ManiSkillScene): simulation scene instance.
+        scene (NEBULAScene): simulation scene instance.
         control_freq (int): control frequency (Hz).
         control_mode (str | None): uid of controller to use
         fix_root_link (bool): whether to fix the robot root link

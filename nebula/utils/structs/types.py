@@ -72,7 +72,7 @@ class DefaultMaterialsConfig:
 
 @dataclass
 class SimConfig:
-    """Simulation configurations for ManiSkill environments"""
+    """Simulation configurations for NEBULA environments"""
 
     spacing: float = 5
     """Controls the spacing between parallel environments when simulating on GPU in meters. Increase this value

@@ -113,7 +113,7 @@ class Step:
 class RecordEpisode(gym.Wrapper):
     """Record trajectories or videos for episodes. You generally should always apply this wrapper last, particularly if you include
     observation wrappers which modify the returned observations. The only wrappers that may go after this one is any of the vector env
-    interface wrappers that map the maniskill env to a e.g. gym vector env interface.
+    interface wrappers that map the nebula env to a e.g. gym vector env interface.
 
     Trajectory data is saved with two files, the actual data in a .h5 file via H5py and metadata in a JSON file of the same basename.
 
@@ -124,7 +124,7 @@ class RecordEpisode(gym.Wrapper):
     - `max_episode_steps` (int)
     - `env_kwargs` (Dict): keyword arguments to initialize the task. **Essential to recreate the environment.**
     - `episodes` (List[Dict]): episode information
-    - `source_type` (Optional[str]): a simple category string describing what process generated the trajectory data. ManiSkill official datasets will usually write one of "human", "motionplanning", or "rl" at the moment.
+    - `source_type` (Optional[str]): a simple category string describing what process generated the trajectory data. NEBULA official datasets will usually write one of "human", "motionplanning", or "rl" at the moment.
     - `source_desc` (Optional[str]): a longer explanation of how the data was generated.
 
     The episode information (the element of `episodes`) includes:
