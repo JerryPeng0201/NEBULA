@@ -49,7 +49,7 @@ def SpatialMediumPlaceContainerSolution(env, seed=None, debug=False, vis=False):
     planner.close_gripper()
     
     # 3. Lift
-    lift_height = 0.15 if target_direction in ["top", "inside"] else 0.08
+    lift_height = 0.15 if target_direction == "inside" else 0.08
     lift_pose = sapien.Pose([0, 0, lift_height]) * grasp_pose
     planner.move_to_pose_with_screw(lift_pose)
     
@@ -85,29 +85,9 @@ def SpatialMediumPlaceContainerSolution(env, seed=None, debug=False, vis=False):
         target_pos = container_pos.copy()
         target_pos[0] += offset_distance * np.cos(angle)
         target_pos[1] += offset_distance * np.sin(angle)
-        target_pos[2] = container_pos[2] - container_height + cube_half_size + 0.10
+        target_pos[2] = container_pos[2] - container_height + cube_half_size + 0.08
         
         # Move to beside position
-        place_pose = sapien.Pose(target_pos, grasp_pose.q)
-        planner.move_to_pose_with_screw(place_pose)
-        
-    elif target_direction == "bottom":
-        # Place below container (on table, under container projection)
-        target_pos = container_pos.copy()
-        target_pos[2] = cube_half_size + 0.01  # Just above table
-        
-        # Navigate around container if needed
-        current_pos = env.agent.tcp.pose.p[0].cpu().numpy()
-        if current_pos[2] > container_pos[2] - container_height:
-            # Move to side first to avoid collision
-            side_pos = target_pos.copy()
-            side_pos[0] += container_radius + 0.1
-            side_pos[2] = container_pos[2] - container_height - 0.05
-            
-            side_pose = sapien.Pose(side_pos, grasp_pose.q)
-            planner.move_to_pose_with_screw(side_pose)
-        
-        # Move to target position below container
         place_pose = sapien.Pose(target_pos, grasp_pose.q)
         planner.move_to_pose_with_screw(place_pose)
     

@@ -4,7 +4,7 @@
 # This script runs motion planning data collection with the Panda robot
 
 CUDA_VISIBLE_DEVICES=0 python -m nebula.data.generation.motionplanning.panda.run \
-    -e Spatial-PlaceContainer-Medium \
+    -e Spatial-PickCube-Medium \
     -o rgb+depth+segmentation \
     -n 10 \
     --render-mode sensors \

@@ -1,7 +1,7 @@
 # <img src="figures/icon.png" height="34px" style="vertical-align: top;"> NEBULA: A Unified Ecosystem for Vision-Language-Action Agent Evaluation
 
 [![Paper](https://img.shields.io/badge/Paper-TODO-b31b1b.svg)](TODO)
-[![Homepage](https://img.shields.io/badge/Homepage-Visit-blue)](https://your-project.com)
+[![Homepage](https://img.shields.io/badge/Homepage-Visit-blue)](https://vulab-ai.github.io/NEBULA-Alpha/)
 [![HuggingFace](https://img.shields.io/badge/HuggingFace-ComingSoon-orange)](TODO)
 [![Leaderboard](https://img.shields.io/badge/Leaderboard-TODO-lightgrey)](TODO)
 
@@ -123,7 +123,7 @@ We currently provide **six baseline agents** along with precomputed results and 
 
 Each folder contains:
 - Training / fine-tuning scripts
-- Evaluation configs (`*.yaml`)
+- Evaluation configs (`config.yaml`)
 
 📋 Progress:
 
@@ -153,6 +153,9 @@ python nebula/visualization/generate_graph_multiple.py \
 
 # Capability-only radar chart
 python nebula/visualization/generate_graph_multiple.py --all --type capability
+
+# Stress-only bar plot
+python nebula/visualization/generate_graph_multiple.py --all --type stress
 ```
 
 These plots include:

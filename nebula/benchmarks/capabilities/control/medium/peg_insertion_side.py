@@ -63,7 +63,6 @@ class ControlPegInsertionSideMediumEnv(BaseEnv):
     - The white end of the peg is within 0.015m of the center of the box (inserted mid way).
     """
 
-    _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/PegInsertionSide-v1_rt.mp4"
     SUPPORTED_ROBOTS = ["panda"]
     agent: Union[PandaWristCam]
     _clearance = 0.003

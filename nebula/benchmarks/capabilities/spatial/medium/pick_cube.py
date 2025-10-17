@@ -41,11 +41,11 @@ class SpatialMediumPickCubeEnv(BaseEnv):
     agent: Union[Panda, Fetch]
     
     cube_half_size = 0.02
-    platform_half_size = 0.1 
+    platform_half_size = [0.08, 0.08, 0.01]
     lift_thresh = 0.05
     task_instruction = "Pick the target object based on spatial relation"
     
-    def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, **kwargs):
+    def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0, **kwargs):
         self.robot_init_qpos_noise = robot_init_qpos_noise
         self.spatial_relations_3d = ["inside", "outside", "on_top_of", "beside"]
         self.object_colors = {
@@ -56,7 +56,7 @@ class SpatialMediumPickCubeEnv(BaseEnv):
         }
         # Available containers
         self.ycb_containers = {
-            "bowl": "024_bowl"
+            "plate": "029_plate"
         }
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
 
@@ -165,17 +165,17 @@ class SpatialMediumPickCubeEnv(BaseEnv):
                 half_size=self.cube_half_size,
                 color=color_rgb,
                 name=f"{color_name}_object",
-                initial_pose=sapien.Pose(p=[0, 0, 1.0])  # Start high to drop down
+                initial_pose=sapien.Pose(p=[0, 0, self.cube_half_size])
             )
             self.objects[color_name] = obj
         
         # Create platform for stacking as simple geometry with lower height
-        self.platform = actors.build_cube(
+        self.platform = actors.build_box(
             self.scene,
-            half_size=self.platform_half_size,
+            half_sizes=self.platform_half_size,
             color=[0.7, 0.7, 0.7, 1],
             name="platform",
-            body_type="kinematic"  # Make platform kinematic
+            initial_pose=sapien.Pose(p=[0., 0., 0,], q=[1.,0.,0.,0.])
         )
 
     def _initialize_episode(self, env_idx: torch.Tensor, options: dict):
@@ -199,7 +199,7 @@ class SpatialMediumPickCubeEnv(BaseEnv):
                 self.scene, 
                 id=f"ycb:{self.current_container_ycb_id}"
             )
-            container_builder.initial_pose = sapien.Pose(p=[0, 0, 1.0])  # Start high
+            container_builder.initial_pose = sapien.Pose(p=[0, 0, 0.0])
             self.container = container_builder.build(name=f"container_{random.randint(1000, 9999)}")
             
             # Set physics properties for stability
@@ -217,14 +217,14 @@ class SpatialMediumPickCubeEnv(BaseEnv):
             
             # Position container in safe area away from robot
             container_xyz = torch.zeros((b, 3))
-            container_xyz[:, :2] = torch.tensor([0.15, 0.12]) + (torch.rand((b, 2)) * 2 - 1) * 0.02
+            container_xyz[:, :2] = torch.tensor([0.1, 0.3]) + (torch.rand((b, 2)) * 2 - 1) * 0.02
             container_xyz[:, 2] = self._get_container_base_height()
             self.container.set_pose(Pose.create_from_pq(container_xyz))
             
             # Position platform in safe area  
             platform_xyz = torch.zeros((b, 3))
-            platform_xyz[:, :2] = torch.tensor([0.20, -0.10]) + (torch.rand((b, 2)) * 2 - 1) * 0.02
-            platform_xyz[:, 2] = -0.05
+            platform_xyz[:, :2] = torch.tensor([0., -0.10]) + (torch.rand((b, 2)) * 2 - 1) * 0.01
+            platform_xyz[:, 2] = self.platform_half_size[2]
             self.platform.set_pose(Pose.create_from_pq(platform_xyz))
             
             # Position target object based on spatial relation to ensure clear spatial relationships
@@ -236,13 +236,15 @@ class SpatialMediumPickCubeEnv(BaseEnv):
                 target_xyz[:, 2] = container_xyz[:, 2] + self._get_container_height() * 0.3 + self.cube_half_size  # Lower in container
             elif self.current_relation_3d == "outside":
                 # Place target object clearly outside (not in container, not on platform)
-                target_xyz[:, :2] = torch.tensor([0.05, 0.25]) + (torch.rand((b, 2)) * 2 - 1) * 0.02  # Specific outside position
+                target_xyz[:, :2] = torch.tensor([0.0, 0.5]) + (torch.rand((b, 2)) * 2 - 1) * 0.02  # Specific outside position
                 target_xyz[:, 2] = self.cube_half_size
             elif self.current_relation_3d == "on_top_of":
                 target_xyz[:, :2] = platform_xyz[:, :2] + (torch.rand((b, 2)) * 2 - 1) * 0.03
-                target_xyz[:, 2] = platform_xyz[:, 2] + self.platform_half_size + self.cube_half_size  # on top of platform
+                target_xyz[:, 2] = platform_xyz[:, 2] + self.platform_half_size[2] + self.cube_half_size  # on top of platform
             else:  # beside
-                target_xyz[:, :2] = platform_xyz[:, :2] + torch.tensor([0.08, 0.0])  # beside platform
+                offset_x = self.platform_half_size[0] + 0.05
+                target_xyz[:, 0] = platform_xyz[:, 0] - offset_x
+                target_xyz[:, 1] = platform_xyz[:, 1] + (torch.rand((b,)) * 2 - 1) * 0.03
                 target_xyz[:, 2] = self.cube_half_size
             
             self.objects[self.target_object].set_pose(Pose.create_from_pq(target_xyz))
@@ -277,25 +279,29 @@ class SpatialMediumPickCubeEnv(BaseEnv):
                         # Make sure neutral objects are far enough from platform to avoid "beside" ambiguity
                         platform_pos = platform_xyz[0, :2].cpu().numpy()
                         distance_to_platform = np.linalg.norm(np.array(pos) - platform_pos)
-                        if distance_to_platform < 0.15:  # Too close to be clearly "not beside"
+                        if distance_to_platform < 0.25:  # Too close to be clearly "not beside"
                             # Move to a more distant neutral position
-                            pos = [0.40, 0.15] if i % 2 == 0 else [-0.10, 0.25]
+                            pos = [0.40, 0.15] if i % 2 == 0 else [-0.15, 0.30]
                     
                     obj_xyz[:, :2] = torch.tensor(pos) + (torch.rand((b, 2)) * 2 - 1) * 0.02
                     obj_xyz[:, 2] = self.cube_half_size
                     self.objects[color].set_pose(Pose.create_from_pq(obj_xyz))
+            
+            for _ in range(10):
+                self.scene.step()
+            
 
     def _get_container_base_height(self):
         """Get the appropriate base height for different container types"""
-        if self.current_container_type == "bowl":
-            return 0.04  # Bowls sit lower
+        if self.current_container_type == "plate":
+            return 0.01
         else:
             return 0.05  # Default
 
     def _get_container_height(self):
         """Get the internal height of different container types for inside relationships"""
-        if self.current_container_type == "bowl":
-            return 0.06  # Bowl depth
+        if self.current_container_type == "plate":
+            return 0.0  
         else:
             return 0.06  # Default
 
@@ -347,8 +353,8 @@ class SpatialMediumPickCubeEnv(BaseEnv):
         return target_map.get(target_object, 0)
 
     def _encode_container_type(self, container_type):
-        """Encode container type as integer: bowl=0, pitcher=1"""
-        container_map = {"bowl": 0, "pitcher": 1}
+        """Encode container type as integer: plate=0, pitcher=1"""
+        container_map = {"plate": 0, "pitcher": 1}
         return container_map.get(container_type, 0)
 
     def _encode_task_type(self, task_type):

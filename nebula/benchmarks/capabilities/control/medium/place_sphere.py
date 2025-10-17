@@ -34,7 +34,6 @@ class ControlPlaceSphereMediumEnv(BaseEnv):
     - The sphere is placed on the top of either bin. The robot remains static and the gripper is not closed at the end state.
     """
 
-    _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/PlaceSphere-v1_rt.mp4"
     SUPPORTED_ROBOTS = ["panda", "fetch"]
 
     # Specify some supported robot types

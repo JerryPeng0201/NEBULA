@@ -33,11 +33,11 @@ class SpatialMediumPlaceContainerEnv(BaseEnv):
     **Task Components:**
     - One container (YCB bowl) suspended in the air as 3D reference
     - One movable cube (red) that needs to be positioned
-    - Clear 3D spatial instruction: "Place the red cube [inside/beside/below] the container"
+    - Clear 3D spatial instruction: "Place the red cube [inside/beside] the container"
 
     **Randomizations:**
     - Container position is randomized in 3D space (with constraints)
-    - Target spatial relationship (inside/beside/below) is randomized
+    - Target spatial relationship (inside/beside) is randomized
     - Initial cube position is randomized on the table surface
     - Container orientation can be slightly randomized
 
@@ -59,18 +59,16 @@ class SpatialMediumPlaceContainerEnv(BaseEnv):
     container_height = 0.035
     
     # 3D spatial configuration
-    CONTAINER_HEIGHT = 0.05          # Height above table for container
+    CONTAINER_HEIGHT = 0.04          # Height above table for container
     INSIDE_TOLERANCE = 0.02          # Tolerance for being "inside"
-    BESIDE_MIN_DISTANCE = 0.03       # Minimum distance for "beside"
-    VERTICAL_OFFSET = 0.03           # Offset for "bottom"
+    BESIDE_MIN_DISTANCE = 0.07       # Minimum distance for "beside"
     PLACEMENT_TOLERANCE = 0.03       # General placement tolerance
 
     def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0, **kwargs):
         self.robot_init_qpos_noise = robot_init_qpos_noise
         
         # 3D spatial directions
-        # self.spatial_directions_3d = ["inside", "beside", "bottom"]
-        self.spatial_directions_3d = ["inside","beside","bottom"]
+        self.spatial_directions_3d = ["inside","beside"]
         
         # Color definitions
         self.color_rgbs = {
@@ -219,7 +217,6 @@ class SpatialMediumPlaceContainerEnv(BaseEnv):
             direction_phrases = {
                 "inside": "inside",
                 "beside": "beside",
-                "bottom": "below"
             }
             self.task_instruction = f"Place the red cube {direction_phrases[self.target_3d_direction]} the metal bowl"
             
@@ -248,9 +245,9 @@ class SpatialMediumPlaceContainerEnv(BaseEnv):
         cube_xyz = torch.zeros((b, 3))
         # Random position on table, away from container projection
         angle = torch.rand(1) * 2 * np.pi
-        distance = 0.20 + torch.rand(1) * 0.08  # 0.12-0.20m from center
+        distance = 0.13 + torch.rand(1) * 0.02
         cube_xyz[:, 0] = distance * torch.cos(angle)
-        cube_xyz[:, 1] = distance * torch.sin(angle)
+        cube_xyz[:, 1] =  distance * torch.sin(angle)
         cube_xyz[:, 2] = self.cube_half_size  # On table surface
         
         self.movable_cube.set_pose(Pose.create_from_pq(cube_xyz))
@@ -273,11 +270,6 @@ class SpatialMediumPlaceContainerEnv(BaseEnv):
             self.target_3d_pos[0] += offset_distance * torch.cos(angle).item()
             self.target_3d_pos[1] += offset_distance * torch.sin(angle).item()
             self.target_3d_pos[2] = container_center[2] - self.container_height + self.cube_half_size
-            
-        elif self.target_3d_direction == "bottom":
-            # Below the container (on table, under container projection)
-            self.target_3d_pos = container_center.clone()
-            self.target_3d_pos[2] = self.cube_half_size  # On table surface
 
     def evaluate(self):
         """Evaluate if the cube is correctly placed in the target 3D spatial region"""
@@ -333,16 +325,6 @@ class SpatialMediumPlaceContainerEnv(BaseEnv):
             
             return beside_radius
             
-        elif self.target_3d_direction == "bottom":
-            # Check if cube is below the container
-            xy_distance = torch.linalg.norm(cube_pos[:2] - container_center[:2])
-            below_container = xy_distance < (self.container_radius + self.PLACEMENT_TOLERANCE)
-            
-            z_below = cube_pos[2] < (container_center[2] - self.container_height - self.PLACEMENT_TOLERANCE)
-            on_table = torch.abs(cube_pos[2] - self.cube_half_size) < self.PLACEMENT_TOLERANCE
-            
-            return below_container and z_below and on_table
-        
         return torch.tensor(False, device=self.device).expand(self.num_envs)
 
     def _get_obs_extra(self, info: Dict):
@@ -375,7 +357,7 @@ class SpatialMediumPlaceContainerEnv(BaseEnv):
 
     def _encode_3d_direction(self, direction):
         """Encode 3D direction as integer"""
-        direction_map = {"inside": 0, "beside": 1, "bottom": 3}
+        direction_map = {"inside": 0, "beside": 1}
         return direction_map.get(direction, 0)
 
     def _encode_task_type(self, task_type):
@@ -439,14 +421,6 @@ class SpatialMediumPlaceContainerEnv(BaseEnv):
             distance_diff = torch.abs(xy_distance - target_distance)
             beside_reward = (1 - torch.tanh(5 * distance_diff)) * 1.5
             return beside_reward
-                
-        elif self.target_3d_direction == "bottom":
-            # Reward for being below container but above ground
-            if cube_pos[2] < container_center[2] and cube_pos[2] > 0.01:
-                bottom_reward = 1.5
-                return bottom_reward
-            else:
-                return torch.tensor(0.0)
         
         return torch.tensor(0.0)
 
@@ -459,7 +433,7 @@ class SpatialMediumPlaceContainerEnv(BaseEnv):
             height_reward = (1 - torch.tanh(10 * height_diff)) * 1
             return height_reward
         else:
-            # For beside and bottom, prefer table level
+            # For beside 
             table_height = self.cube_half_size
             height_diff = torch.abs(cube_pos[2] - table_height)
             height_reward = (1 - torch.tanh(10 * height_diff)) * 0.5

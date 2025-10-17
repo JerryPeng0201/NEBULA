@@ -32,7 +32,7 @@ class DynamicShapeSwitchPickEnv(BaseEnv):
 
     **Randomizations:**
     - Initial positions of both objects
-    - Shape switch timing (between step 10-20)
+    - Shape switch timing
     - Object orientations
 
     **Success Conditions:**

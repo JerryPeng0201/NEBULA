@@ -77,7 +77,7 @@ class SpatialHardPickCubeEnv(BaseEnv):
         
         # Available containers (using YCB models)
         self.ycb_containers = {
-            "bowl": "024_bowl",
+            "plate": "029_plate",
         }
         
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
@@ -203,10 +203,10 @@ class SpatialHardPickCubeEnv(BaseEnv):
         # Create platform as flat rectangle floating above table using SAPIEN builder
         platform_builder = self.scene.create_actor_builder()
         platform_builder.add_box_collision(half_size=[0.08, 0.08, 0.01])  # Flat rectangle
-        platform_builder.add_box_visual(half_size=[0.08, 0.08, 0.01], 
+        platform_builder.add_box_visual(half_size=[0.10, 0.10, 0.01], 
                                        material=sapien.render.RenderMaterial(base_color=[0.7, 0.7, 0.7, 1]))
         platform_builder.set_physx_body_type("kinematic")
-        platform_builder.initial_pose = sapien.Pose(p=[0, 0, 1.0])  # Start high
+        platform_builder.initial_pose = sapien.Pose(p=[0, 0, 2.5])  # Start high
         self.platform = platform_builder.build(name="platform")
 
     def _initialize_episode(self, env_idx: torch.Tensor, options: dict):
@@ -257,6 +257,9 @@ class SpatialHardPickCubeEnv(BaseEnv):
             
             # Position remaining objects as distractors in neutral positions
             self._position_distractor_objects(b)
+
+            for i in range(5):
+                self.scene.step()
 
     def _position_container_and_platform(self, b):
         """Position container and platform with separation"""
@@ -515,15 +518,15 @@ class SpatialHardPickCubeEnv(BaseEnv):
 
     def _get_container_base_height(self):
         """Get the appropriate base height for different container types"""
-        if self.current_container_type == "bowl":
-            return 0.04  # Bowls sit lower
+        if self.current_container_type == "plate":
+            return 0.013
         else:
             return 0.05  # Default
 
     def _get_container_height(self):
         """Get the internal height of different container types for inside relationships"""
-        if self.current_container_type == "bowl":
-            return 0.06  # Bowl depth
+        if self.current_container_type == "plate":
+            return 0.0  # plate depth
         else:
             return 0.06  # Default
 
@@ -596,8 +599,8 @@ class SpatialHardPickCubeEnv(BaseEnv):
         return color_map.get(color, 0)
 
     def _encode_container_type(self, container_type):
-        """Encode container type as integer: bowl=0"""
-        container_map = {"bowl": 0}
+        """Encode container type as integer: plate=0"""
+        container_map = {"plate": 0}
         return container_map.get(container_type, 0)
 
     def _encode_task_type(self, task_type):

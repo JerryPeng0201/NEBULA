@@ -52,7 +52,7 @@ def SpatialEasyPickCubeSolution(env: SpatialEasyPickCubeEnv, seed=None, debug=Fa
     # -------------------------------------------------------------------------- #
     # Lift
     # -------------------------------------------------------------------------- #
-    lift_pose = grasp_pose * sapien.Pose([0, 0, -0.05])
+    lift_pose = grasp_pose * sapien.Pose([0, 0, -0.08])
     res = planner.move_to_pose_with_screw(lift_pose)
     
     planner.close()

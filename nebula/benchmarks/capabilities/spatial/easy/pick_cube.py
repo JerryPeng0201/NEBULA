@@ -228,10 +228,10 @@ class SpatialEasyPickCubeEnv(BaseEnv):
         
         # Define spatial offset vectors from reference cube
         spatial_offsets = {
-            "left": torch.tensor([0.0, self.SPATIAL_SEPARATION]),      # Positive Y is left from robot perspective
-            "right": torch.tensor([0.0, -self.SPATIAL_SEPARATION]),    # Negative Y is right from robot perspective  
-            "front": torch.tensor([self.SPATIAL_SEPARATION, 0.0]),     # Positive X is front (closer to robot)
-            "back": torch.tensor([-self.SPATIAL_SEPARATION, 0.0])      # Negative X is back (away from robot)
+            "left": torch.tensor([0.0,self.SPATIAL_SEPARATION]), 
+            "right": torch.tensor([0.0,-self.SPATIAL_SEPARATION]),
+            "front": torch.tensor([self.SPATIAL_SEPARATION,0.0]), 
+            "back": torch.tensor([-self.SPATIAL_SEPARATION,0.0])
         }
         
         # Position each assigned cube in its spatial direction
@@ -298,18 +298,13 @@ class SpatialEasyPickCubeEnv(BaseEnv):
         is_robot_static = self.agent.is_static(0.2)
         
         # Check if wrong cube was picked (spatial understanding failure)
-        wrong_cube_picked = False
+        wrong_cube_picked = torch.zeros_like(is_grasped, dtype=torch.bool)
         for color, cube in self.cubes.items():
             if color != self.target_color and color != "blue":  # Exclude reference cube
-                if self.agent.is_grasping(cube):
-                    wrong_cube_picked = True
-                    break
-        
-        # Verify spatial relationship is maintained
-        spatial_relationship_correct = self._verify_spatial_relationship()
-        
+                wrong_cube_picked = wrong_cube_picked | self.agent.is_grasping(cube)
+            
         success = (is_lifted & is_grasped & is_robot_static & 
-                  (~wrong_cube_picked) & spatial_relationship_correct)
+                (~wrong_cube_picked))
         
         return {
             "success": success,
@@ -317,33 +312,10 @@ class SpatialEasyPickCubeEnv(BaseEnv):
             "is_grasped": is_grasped,
             "is_robot_static": is_robot_static,
             "wrong_cube_picked": wrong_cube_picked,
-            "spatial_relationship_correct": spatial_relationship_correct,
             "task_instruction": self.task_instruction,
             "target_color": self.target_color,
             "target_direction": self.target_direction
         }
-
-    def _verify_spatial_relationship(self):
-        """Verify that the target cube is still in the correct spatial relationship to reference"""
-        target_cube = self.cubes[self.target_color]
-        reference_cube = self.cubes["blue"]
-        
-        target_pos = target_cube.pose.p[0, :2]
-        ref_pos = reference_cube.pose.p[0, :2]
-        
-        relative_pos = target_pos - ref_pos
-        
-        # Check if cube is in the correct spatial direction
-        if self.target_direction == "left":
-            return relative_pos[1] > (self.SPATIAL_SEPARATION * 0.5)  # Positive Y
-        elif self.target_direction == "right":
-            return relative_pos[1] < -(self.SPATIAL_SEPARATION * 0.5)  # Negative Y
-        elif self.target_direction == "front":
-            return relative_pos[0] > (self.SPATIAL_SEPARATION * 0.5)  # Positive X
-        elif self.target_direction == "back":
-            return relative_pos[0] < -(self.SPATIAL_SEPARATION * 0.5)  # Negative X
-        
-        return torch.tensor(True)
 
     def compute_dense_reward(self, obs: Any, action: torch.Tensor, info: Dict):
         target_cube = self.cubes[self.target_color]
@@ -367,11 +339,8 @@ class SpatialEasyPickCubeEnv(BaseEnv):
         # 5. Wrong cube penalty (emphasizes spatial discrimination)
         wrong_cube_penalty = info["wrong_cube_picked"] * 3.0
         
-        # 6. Spatial relationship maintenance bonus
-        spatial_correct_bonus = info["spatial_relationship_correct"].float() * 1.0
-        
         reward = (reaching_reward + grasping_reward + lifting_reward + 
-                 spatial_bonus + spatial_correct_bonus - wrong_cube_penalty)
+                 spatial_bonus - wrong_cube_penalty)
         
         # Success bonus
         reward[info["success"]] += 3

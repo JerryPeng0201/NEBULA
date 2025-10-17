@@ -33,9 +33,6 @@ class ControlStackCubeHardEnv(BaseEnv):
     - the blue cube is static and on top of both the red and green cube
     - the purple cube is placed next to the arrangement
     - none of the cubes are grasped by the robot (robot must let go of the cubes)
-
-    _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/StackPyramid-v1_rt.mp4"
-
     """
 
     SUPPORTED_ROBOTS = ["panda", "fetch"]
