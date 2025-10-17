@@ -5,10 +5,6 @@ from nebula.data.generation.motionplanning.panda.motionplanner import PandaArmMo
 from nebula.data.generation.motionplanning.panda.utils import compute_grasp_info_by_obb, get_actor_obb
 
 def SpatialHardPickCubeSolution(env: SpatialHardPickCubeEnv, seed=None, debug=False, vis=False):
-    """
-    Motion-planning solution for complex spatial reasoning pick task.
-    Handles nested spatial relationships (on_top_of_inside, beside_under_platform, etc.)
-    """
     env.reset(seed=seed)
     
     planner = PandaArmMotionPlanningSolver(
@@ -23,8 +19,6 @@ def SpatialHardPickCubeSolution(env: SpatialHardPickCubeEnv, seed=None, debug=Fa
     FINGER_LENGTH = 0.025
     base_env = env.unwrapped
     target_object = base_env.objects[base_env.target_object_color]
-
-    # print(env.task_instruction)
 
     try:
         # Calculate grasp pose
