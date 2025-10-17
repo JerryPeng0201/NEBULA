@@ -8,9 +8,6 @@ Clone the [Robotics Diffusion Transformer](https://github.com/thu-ml/RoboticsDif
 # Clone the repository
 cd baselines/RDT
 git clone https://github.com/thu-ml/RoboticsDiffusionTransformer.git
-
-# Copy integration files (if needed)
-# cp [nebula_integration_files] RoboticsDiffusionTransformer/
 ```
 2. ## Fine-tuning
 

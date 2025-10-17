@@ -188,9 +188,6 @@ def run_episode(env, policy, env_id, config, episode_idx, save_video=False, vide
     done = False
     episode_gpu_memory_peak = 0
     episode_cpu_memory_peak = 0
-
-    if torch.cuda.is_available():
-        torch.cuda.reset_peak_memory_stats()
     
     if hasattr(env, 'evaluate'):
         info = env.evaluate()
@@ -415,7 +412,7 @@ def generate_conclusion(config, test_type):
     print(f"Average GPU Memory Peak: {summary['overall_metrics']['average_gpu_memory_peak']:.2f} MB")
     print(f"Average CPU Memory Peak: {summary['overall_metrics']['average_cpu_memory_peak']:.2f} MB")
 
-def save_task_result(task_result, config, param_info, is_first_task=False, test_type='all'):
+def save_task_result(task_result, config, param_info, baseline_info=None, is_first_task=False, test_type='all'):
     """Save task result to JSON file."""
     output_dir = Path(config['experiment']['save_dir'])
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -433,22 +430,20 @@ def save_task_result(task_result, config, param_info, is_first_task=False, test_
             'timestamp': datetime.now().isoformat(),
             'config': serializable_config,
             'model_size': f"{param_info['total'] * 4 / 1024**2:.1f} MB (assuming float32)",
+            'model_parameters': {
+                'total': param_info['total'],
+                'trainable': param_info['trainable'],
+                'non_trainable': param_info['non_trainable']
+            },
             'results': []
         }
+        
+        if baseline_info is not None:
+            results_data['baseline_memory'] = make_json_serializable(baseline_info)
     
     serializable_task_result = make_json_serializable(task_result)
     results_data['results'].append(serializable_task_result)
     
-    temp_file = output_dir / f'results_{test_type}_{session_id}.json.tmp'
-    with open(temp_file, 'w') as f:
-        json.dump(results_data, f, indent=2)
-    temp_file.replace(results_file)
-    
-    # Append task result
-    serializable_task_result = make_json_serializable(task_result)
-    results_data['results'].append(serializable_task_result)
-    
-    # Write atomically
     temp_file = output_dir / f'results_{test_type}_{session_id}.json.tmp'
     with open(temp_file, 'w') as f:
         json.dump(results_data, f, indent=2)
@@ -473,6 +468,15 @@ def main():
     
     policy = create_gr00t_policy(config)
     param_info = count_parameters(policy)
+
+    baseline_info = {}
+    if torch.cuda.is_available():
+        torch.cuda.synchronize()
+        baseline_info = {
+            'gpu_allocated_mb': torch.cuda.memory_allocated() / 1024**2,
+            'gpu_reserved_mb': torch.cuda.memory_reserved() / 1024**2,
+            'timestamp': datetime.now().isoformat()
+        }
     
     if args.tasks:
         tasks = args.tasks
@@ -485,7 +489,10 @@ def main():
     
     for idx, task in enumerate(tqdm(tasks, desc="Overall Progress")):
         result = evaluate_task(task, policy, config)
-        save_task_result(result, config, param_info, is_first_task=(idx == 0), test_type=args.test_type)
+        save_task_result(result, config, param_info, 
+                         baseline_info=baseline_info if idx == 0 else None,
+                         is_first_task=(idx == 0), 
+                         test_type=args.test_type)
 
     generate_conclusion(config, args.test_type)
 
