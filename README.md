@@ -1,9 +1,9 @@
 # <img src="figures/icon.png" height="34px" style="vertical-align: top;"> NEBULA: A Unified Ecosystem for Vision-Language-Action Agent Evaluation
 
-[![Paper](https://img.shields.io/badge/Paper-TODO-b31b1b.svg)](TODO)
+[![Paper](https://img.shields.io/badge/Paper-arXiv-blue.svg)](https://arxiv.org/abs/2510.16263)
 [![Homepage](https://img.shields.io/badge/Homepage-Visit-blue)](https://vulab-ai.github.io/NEBULA-Alpha/)
 [![HuggingFace](https://img.shields.io/badge/HuggingFace-ComingSoon-orange)](TODO)
-[![Leaderboard](https://img.shields.io/badge/Leaderboard-TODO-lightgrey)](TODO)
+[![Leaderboard](https://img.shields.io/badge/Leaderboard-ComingSoon-orange)](TODO)
 
 ![Alt text](figures/overall.png)
 
