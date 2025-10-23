@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=62.3.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nebula-alpha"
+dynamic = ["version"]
+description = "NEBULA-Alpha: An advanced robotics simulation environment with ManiSkill-compatible dependencies"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+    {name = "NEBULA-Alpha contributors"}
+]
+keywords = ["robotics", "simulation", "reinforcement-learning", "manipulation", "embodied-ai"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.urls]
+Homepage = "https://vulab-ai.github.io/NEBULA-Alpha/"
+Repository = "https://github.com/JerryPeng0201/NEBULA-Alpha"
+
+[tool.pytest.ini_options]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "serial",
+]
+
+[tool.setuptools.packages.find]
+include = ["nebula*"]
+
+[tool.setuptools.package-data]
+nebula = ["**/*.glb", "**/*.urdf", "**/*.xml", "**/*.json", "**/*.yaml", "**/*.yml", "assets/**", "configs/**"]
+

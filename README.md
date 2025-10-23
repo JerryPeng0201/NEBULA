@@ -77,10 +77,12 @@ conda create -n nebula python=3.10
 
 conda activate nebula
 
-# We recommend using a PyTorch version compatible with CUDA 12.4.
-pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu124
+pip install -e .
 
 pip install -r requirements.txt
+
+# We recommend using a PyTorch version compatible with CUDA 12.4.
+pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu124
 ```
 
 ## 🗂️ Using the Unified Data Platform
