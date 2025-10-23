@@ -263,10 +263,13 @@ With guidance from:
 ## 📚 Citation
 
 ```bibtex
-@article{,
-  title={NEBULA: Do We Evaluate Vision-Language-Action Agents Correctly?},
-  author={},
-  journal={},
-  year={2025}
+@misc{peng2025nebulaevaluatevisionlanguageactionagents,
+      title={NEBULA: Do We Evaluate Vision-Language-Action Agents Correctly?}, 
+      author={Jierui Peng, Yanyan Zhang, Yicheng Duan, Tuo Liang, Vipin Chaudhary, Yu Yin},
+      year={2025},
+      eprint={2510.16263},
+      archivePrefix={arXiv},
+      primaryClass={cs.RO},
+      url={https://arxiv.org/abs/2510.16263}, 
 }
 ```
