@@ -24,7 +24,7 @@ classifiers = [
 
 [project.urls]
 Homepage = "https://vulab-ai.github.io/NEBULA-Alpha/"
-Repository = "https://github.com/JerryPeng0201/NEBULA-Alpha"
+Repository = "https://github.com/JerryPeng0201/NEBULA"
 
 [tool.pytest.ini_options]
 markers = [
