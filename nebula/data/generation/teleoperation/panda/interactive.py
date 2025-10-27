@@ -59,7 +59,7 @@ def main(args: Args):
     output_dir = f"{args.record_dir}/{args.env_id}/teleop/"
     if os.name == 'nt':
         output_dir = f"{args.record_dir}\\{args.env_id}\\teleop\\"
-    opts = {"task_instruction":args.task_instruction}
+    
     if not args.only_replay:
 
         env = gym.make(
@@ -78,15 +78,22 @@ def main(args: Args):
             info_on_video=False,
             task_name=args.env_id,
             source_type="teleoperation",
-            source_desc="teleoperation via the click+drag system",
+            source_desc="teleoperation via NEBULA click+drag system",
             subtask_idx=args.subtask_idx,
             record_reward=True
         )
         num_trajs = 0
         seed = random.randint(0, 10000000)
+        if hasattr(env.unwrapped, 'get_task_instruction'):
+            opts = {"task_instruction": env.unwrapped.get_task_instruction()}
+        elif args.task_instruction != "":
+            opts = {"task_instruction":args.task_instruction}
+        else:
+            opts = {"task_instruction":""}
+
         env.reset(seed=seed,options=opts)
         while True:
-            print(f"Collecting trajectory {num_trajs+1}, seed={seed}")
+            print(f"Collecting trajectory {num_trajs}, seed={seed}")
             code = solve(env,args=args, debug=False, vis=True)
             if code == "quit":
                 num_trajs += 1
@@ -141,6 +148,7 @@ def main(args: Args):
             )
         print(f"Replaying trajectories from {h5_file_path} and saving videos to {output_dir}")
         video_info_list = []
+
         for episode in json_data["episodes"]:
             
             traj_id = f"traj_{episode['episode_id']}"
@@ -153,27 +161,40 @@ def main(args: Args):
             for action in np.array(data["actions"]):
                 env.step(action)
             
-            video_info_list.append(deepcopy(env.current_episode_videos))
+            if hasattr(env.unwrapped, 'get_task_instruction'):
+                opts = {"task_instruction": env.unwrapped.get_task_instruction()}
+            elif args.task_instruction != "":
+                opts = {"task_instruction":args.task_instruction}
+            else:
+                opts = {"task_instruction":"complete the task"}
+
+            video_info_list.append({"videos":deepcopy(env.current_episode_videos),"task_instruction":opts["task_instruction"]})
             
         # explicitly reset the environment to ensure the next episode starts fresh, to get last video info
         env.reset(**episode["reset_kwargs"])
         # append the last video info to the list
-        video_info_list.append(deepcopy(env.current_episode_videos))
+        if hasattr(env.unwrapped, 'get_task_instruction'):
+            opts = {"task_instruction": env.unwrapped.get_task_instruction()}
+        elif args.task_instruction != "":
+            opts = {"task_instruction":args.task_instruction}
+        else:
+            opts = {"task_instruction":"complete the task"}
+
+        video_info_list.append({"videos":deepcopy(env.current_episode_videos),"task_instruction":opts["task_instruction"]})
 
         video_info_list.pop(0)  # remove the first empty video info
-        for idx,episode in enumerate(json_data["episodes"]):
-            episode["videos"] = video_info_list[idx]
-            if "task_instruction" not in episode and args.task_instruction != "":
-                # If the task instruction is not already in the episode, add it
-                # This is useful for the case where the task instruction is not provided in the JSON file
-                episode["task_instruction"] = args.task_instruction
 
-        with open(json_file_path, "w") as f:
-            json.dump(json_data, f, indent=2)
+        for idx,episode in enumerate(json_data["episodes"]):
+
+            episode["videos"] = video_info_list[idx]['videos']
+            episode["task_instruction"] = video_info_list[idx]["task_instruction"]
 
         trajectory_data.close()
         env.close()
         del env
+
+        with open(json_file_path, "w") as f:
+            json.dump(json_data, f, indent=2)
 
 
 
@@ -190,6 +211,7 @@ def solve(env: BaseEnv,args: Args, debug=False, vis=False,):
             planner = RemoteStick(env, debug=debug, vis=vis, base_pose=env.unwrapped.agent.robot.pose, visualize_target_grasp_pose=False,
                                   print_env_info=False, joint_acc_limits=0.5, joint_vel_limits=0.5, grpc_addr=grpc_addr)
         else:
+            # currently not supporting a local motion planner for the panda stick variant
             from nebula.data.generation.motionplanning.panda.motionplanner_stick import PandaStickMotionPlanningSolver
             planner = PandaStickMotionPlanningSolver(env, debug=debug, vis=vis, base_pose=env.unwrapped.agent.robot.pose,
                                                      visualize_target_grasp_pose=False, print_env_info=False,
@@ -251,6 +273,13 @@ def solve(env: BaseEnv,args: Args, debug=False, vis=False,):
         #         env.set_state_dict(last_checkpoint_state)
         #     else:
         #         print("Could not find previous checkpoint")
+        elif viewer.window.key_press("t"):
+            if hasattr(env.unwrapped, "task_instruction"):
+                print(f"Task Instruction: {env.unwrapped.task_instruction}")
+            elif args.task_instruction != "":
+                print(f"Task Instruction: {args.task_instruction}")
+            else:
+                print("No task instruction found for this environment.")
         elif viewer.window.key_press("q"):
             return "quit"
         elif viewer.window.key_press("c"):
