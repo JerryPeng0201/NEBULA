@@ -270,10 +270,6 @@ class SpatialHardKitchenAssemblyEnv(BaseEnv):
             obj.set_linear_velocity(torch.zeros((b, 3)))
             obj.set_angular_velocity(torch.zeros((b, 3)))
 
-            # Let settle
-            for _ in range(10):
-                self.scene.step()
-
     def _generate_kitchen_instruction(self):
         """Generate logical kitchen instructions"""
         container_type = self._get_container_type(self.selected_objects["container"])
@@ -394,56 +390,76 @@ class SpatialHardKitchenAssemblyEnv(BaseEnv):
     def _check_inside_relationship(self, objects):
         """Check inside relationship"""
         if len(objects) < 2:
-            return torch.tensor(False, device=self.device, dtype=torch.bool)
+            b = self.num_envs
+            return torch.zeros(b, device=self.device, dtype=torch.bool)
             
         food_obj = self.kitchen_objects.get(objects[0])
         container_obj = self.kitchen_objects.get(objects[1])
         
         if food_obj is None or container_obj is None:
-            return torch.tensor(False, device=self.device, dtype=torch.bool)
+            b = self.num_envs
+            return torch.zeros(b, device=self.device, dtype=torch.bool)
 
-        food_pos = food_obj.pose.p[0] if food_obj.pose.p.dim() > 1 else food_obj.pose.p
-        container_pos = container_obj.pose.p[0] if container_obj.pose.p.dim() > 1 else container_obj.pose.p
+        food_pos = food_obj.pose.p
+        container_pos = container_obj.pose.p
+    
+        if food_pos.dim() == 1:
+            food_pos = food_pos.unsqueeze(0)
+        if container_pos.dim() == 1:
+            container_pos = container_pos.unsqueeze(0)
         
-        xy_distance = torch.linalg.norm(food_pos[:2] - container_pos[:2])
-        height_in_container = (container_pos[2] + 0.01 < food_pos[2] < container_pos[2] + 0.1)
+        xy_distance = torch.linalg.norm(food_pos[:, :2] - container_pos[:, :2], dim=1)
+        height_in_container = (container_pos[:, 2] + 0.01 < food_pos[:, 2]) & (food_pos[:, 2] < container_pos[:, 2] + 0.1)
         
-        result = (xy_distance < 0.03) and height_in_container
-        return torch.tensor(result, device=self.device, dtype=torch.bool)
+        result = (xy_distance < 0.03) & height_in_container
+        return result
 
     def _check_beside_relationship(self, objects):
         """Check beside relationship"""
         if len(objects) < 2:
-            return torch.tensor(False, device=self.device, dtype=torch.bool)
+            b = self.num_envs
+            return torch.zeros(b, device=self.device, dtype=torch.bool)
             
         obj1 = self.kitchen_objects.get(objects[0])
         obj2 = self.kitchen_objects.get(objects[1])
         
         if obj1 is None or obj2 is None:
-            return torch.tensor(False, device=self.device, dtype=torch.bool)
+            b = self.num_envs
+            return torch.zeros(b, device=self.device, dtype=torch.bool)
 
-        pos1 = obj1.pose.p[0] if obj1.pose.p.dim() > 1 else obj1.pose.p
-        pos2 = obj2.pose.p[0] if obj2.pose.p.dim() > 1 else obj2.pose.p
+        pos1 = obj1.pose.p
+        pos2 = obj2.pose.p
         
-        distance = torch.linalg.norm(pos1[:2] - pos2[:2])
-        height_similar = abs(pos1[2] - pos2[2]) < self.PLACEMENT_TOLERANCE
+        if pos1.dim() == 1:
+            pos1 = pos1.unsqueeze(0)
+        if pos2.dim() == 1:
+            pos2 = pos2.unsqueeze(0)
         
-        return torch.tensor((distance < self.GROUPING_DISTANCE) and height_similar,
-                          device=self.device, dtype=torch.bool)
-
+        distance = torch.linalg.norm(pos1[:, :2] - pos2[:, :2], dim=1)
+        height_similar = torch.abs(pos1[:, 2] - pos2[:, 2]) < self.PLACEMENT_TOLERANCE
+        
+        return (distance < self.GROUPING_DISTANCE) & height_similar  # shape [batch_size]
+    
     def _check_all_objects_stable(self):
         """Check if all objects are stable"""
+        b = self.num_envs
+        all_stable = torch.ones(b, device=self.device, dtype=torch.bool)
+        
         for obj in self.kitchen_objects.values():
-            linear_vel = obj.linear_velocity[0] if obj.linear_velocity.dim() > 1 else obj.linear_velocity
-            angular_vel = obj.angular_velocity[0] if obj.angular_velocity.dim() > 1 else obj.angular_velocity
+            linear_vel = obj.linear_velocity
+            angular_vel = obj.angular_velocity
             
-            linear_velocity = torch.linalg.norm(linear_vel)
-            angular_velocity = torch.linalg.norm(angular_vel)
+            if linear_vel.dim() == 1:
+                linear_vel = linear_vel.unsqueeze(0)
+            if angular_vel.dim() == 1:
+                angular_vel = angular_vel.unsqueeze(0)
             
-            if linear_velocity > 0.05 or angular_velocity > 0.1:
-                return torch.tensor(False, device=self.device, dtype=torch.bool)
-                
-        return torch.tensor(True, device=self.device, dtype=torch.bool)
+            linear_velocity = torch.linalg.norm(linear_vel, dim=1)
+            angular_velocity = torch.linalg.norm(angular_vel, dim=1)
+            
+            all_stable = all_stable & (linear_velocity <= 0.05) & (angular_velocity <= 0.1)
+        
+        return all_stable 
 
     def compute_dense_reward(self, obs: Any, action: torch.Tensor, info: Dict):
         total_reward = 0.0
