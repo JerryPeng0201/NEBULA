@@ -184,13 +184,6 @@ class SpatialHardKitchenAssemblyEnv(BaseEnv):
             self.kitchen_areas = {
                 "counter": {"height": self.COUNTER_HEIGHT, "area": [-0.35, 0.35, -0.35, 0.35]}
             }
-            
-            """print(f"Kitchen Instruction: '{self.task_instruction}'")
-            print(f"Selected Objects: {list(self.selected_objects.keys())}")"""
-
-            # Brief final settling
-            for _ in range(5):
-                self.scene.step()
 
     def _select_kitchen_objects(self):
         """Select 3-4 kitchen objects"""
@@ -201,14 +194,14 @@ class SpatialHardKitchenAssemblyEnv(BaseEnv):
         }
         
         # Sometimes add second container
-        if random.random() > 0.4:
+        if self._episode_rng.rand() > 0.4:
             available_containers = [c for c in self.kitchen_containers if c != self.selected_objects["container"]]
             self.selected_objects["container2"] = random.choice(available_containers)
 
     def _create_kitchen_objects(self):
         """Create YCB objects with enhanced stability"""
         self.kitchen_objects = {}
-        episode_id = random.randint(10000, 99999)
+        episode_id = self._episode_rng.randint(10000, 99999)
         
         for obj_type, ycb_id in self.selected_objects.items():
             builder = actors.get_actor_builder(self.scene, id=f"ycb:{ycb_id}")
@@ -228,7 +221,7 @@ class SpatialHardKitchenAssemblyEnv(BaseEnv):
             self.kitchen_objects[obj_type] = obj
 
     def _build_kitchen_surfaces(self):
-        surface_id = random.randint(10000, 99999)
+        surface_id = self._episode_rng.randint(10000, 99999)
         workspace_builder = self.scene.create_actor_builder()
         workspace_builder.add_box_visual(
             half_size=[0.35, 0.35, 0.001],
@@ -250,8 +243,8 @@ class SpatialHardKitchenAssemblyEnv(BaseEnv):
         for i, (obj_type, obj) in enumerate(self.kitchen_objects.items()):
             # Find random position far from existing objects
             for _ in range(50):
-                x = random.uniform(-0.20, 0.20)
-                y = random.uniform(-0.20, 0.20)
+                x = self._episode_rng.uniform(-0.20, 0.20)
+                y = self._episode_rng.uniform(-0.20, 0.20)
                 pos = [x, y]
                 
                 if all(np.linalg.norm(np.array(pos) - np.array(used_pos)) > min_distance
@@ -300,7 +293,8 @@ class SpatialHardKitchenAssemblyEnv(BaseEnv):
         # Multiple beside relationships
         templates.append(f"Place the {utensil_name} beside the {container_type} and place the {food_name} beside the {utensil_name}")
 
-        self.task_instruction = random.choice(templates) if templates else f"Place the {utensil_name} beside the {container_type}"
+        template_idx = self._episode_rng.randint(0, len(templates))
+        self.task_instruction = templates[template_idx] if templates else f"Place the {utensil_name} beside the {container_type}"
         self._parse_instruction_steps()
 
     def _get_container_type(self, ycb_id):
@@ -371,18 +365,28 @@ class SpatialHardKitchenAssemblyEnv(BaseEnv):
             elif step["action"] == "place_beside":
                 completion = self._check_beside_relationship(step["objects"])
             else:
-                completion = torch.tensor(False, device=self.device, dtype=torch.bool)
+                completion = torch.tensor([False], device=self.device, dtype=torch.bool)
                 
             step_completions.append(completion)
 
         all_stable = self._check_all_objects_stable()
-        overall_success = torch.tensor(all(step_completions) and all_stable, device=self.device, dtype=torch.bool)
+        
+        if len(step_completions) > 0:
+            steps_complete = torch.stack(step_completions).all()
+            overall_success = steps_complete & all_stable
+        else:
+            overall_success = all_stable
+        
+        if overall_success.dim() == 0:
+            overall_success = overall_success.unsqueeze(0)
+        
+        steps_completed_count = sum([c.item() for c in step_completions])
 
         return {
             "success": overall_success,
-            "steps_completed": sum(step_completions),
+            "steps_completed": steps_completed_count,
             "total_steps": len(self.instruction_steps),
-            "all_stable": all_stable,
+            "all_stable": all_stable if all_stable.dim() > 0 else all_stable.unsqueeze(0),
             "task_instruction": self.task_instruction,
             "step_details": step_completions
         }

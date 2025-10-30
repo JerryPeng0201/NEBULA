@@ -206,19 +206,22 @@ class DynamicMediumPickCubeWithCollisionEnv(BaseEnv):
             ball_xyz[:, 2] = -10  # Below table, hidden
             self.interference_ball.set_pose(Pose.create_from_pq(p=ball_xyz, q=[1, 0, 0, 0]))
 
-            # Initialize interference tracking - one trigger per episode
+
+            interference_steps = self._episode_rng.randint(
+                self.interference_step_range[0],
+                self.interference_step_range[1],
+                size=(b,)
+            )
+            
+            # Initialize interference tracking
             self.interference_state = {
-                'step_count': torch.zeros(self.num_envs, dtype=torch.int32, device=self.device),
-                'interference_step': torch.randint(
-                    self.interference_step_range[0], 
-                    self.interference_step_range[1], 
-                    (self.num_envs,), 
-                    device=self.device, 
-                    dtype=torch.int32
+                'step_count': torch.zeros(b, dtype=torch.int32, device=self.device),
+                'interference_step': torch.from_numpy(interference_steps).to(
+                    device=self.device, dtype=torch.int32
                 ),
-                'interference_triggered': torch.zeros(self.num_envs, dtype=torch.bool, device=self.device),
-                'ball_active': torch.zeros(self.num_envs, dtype=torch.bool, device=self.device),
-                'collision_detected': torch.zeros(self.num_envs, dtype=torch.bool, device=self.device),
+                'interference_triggered': torch.zeros(b, dtype=torch.bool, device=self.device),
+                'ball_active': torch.zeros(b, dtype=torch.bool, device=self.device),
+                'collision_detected': torch.zeros(b, dtype=torch.bool, device=self.device),
             }
 
     def step(self, action):
@@ -294,29 +297,40 @@ class DynamicMediumPickCubeWithCollisionEnv(BaseEnv):
             
         # Get cube positions for environments that need ball launch
         cube_pos = self.cube.pose.p[launch_mask]
-        b = launch_mask.sum()
+        b = launch_mask.sum().item()
         
         # Calculate launch position closer to cube for better accuracy
         launch_pos = torch.zeros((b, 3), device=self.device)
         
-        # Random side selection for each environment
-        sides = torch.randint(0, 4, (b,), device=self.device)
+        sides = self._episode_rng.randint(0, 4, size=(b,))
         
-        # Set launch positions closer to the table and aligned with cube
+        noise_x = self._episode_rng.normal(0, 0.02, size=(b,))
+        noise_y = self._episode_rng.normal(0, 0.02, size=(b,))
+        
+        # Set launch positions
         for i in range(b):
-            cube_x, cube_y = cube_pos[i, 0], cube_pos[i, 1]
-            # Reduce noise for better accuracy
-            noise_x = torch.randn(1, device=self.device) * 0.02
-            noise_y = torch.randn(1, device=self.device) * 0.02
+            cube_x, cube_y = cube_pos[i, 0].item(), cube_pos[i, 1].item()
             
             if sides[i] == 0:  # From +X side
-                launch_pos[i] = torch.tensor([0.25, cube_y + noise_y, cube_pos[i, 2]], device=self.device)
+                launch_pos[i] = torch.tensor(
+                    [0.25, cube_y + noise_y[i], cube_pos[i, 2].item()], 
+                    device=self.device
+                )
             elif sides[i] == 1:  # From -X side  
-                launch_pos[i] = torch.tensor([-0.25, cube_y + noise_y, cube_pos[i, 2]], device=self.device)
+                launch_pos[i] = torch.tensor(
+                    [-0.25, cube_y + noise_y[i], cube_pos[i, 2].item()], 
+                    device=self.device
+                )
             elif sides[i] == 2:  # From +Y side
-                launch_pos[i] = torch.tensor([cube_x + noise_x, 0.25, cube_pos[i, 2]], device=self.device)
+                launch_pos[i] = torch.tensor(
+                    [cube_x + noise_x[i], 0.25, cube_pos[i, 2].item()], 
+                    device=self.device
+                )
             else:  # From -Y side
-                launch_pos[i] = torch.tensor([cube_x + noise_x, -0.25, cube_pos[i, 2]], device=self.device)
+                launch_pos[i] = torch.tensor(
+                    [cube_x + noise_x[i], -0.25, cube_pos[i, 2].item()], 
+                    device=self.device
+                )
         
         # Set ball position for launching environments
         current_ball_pos = self.interference_ball.pose.p.clone()
@@ -361,7 +375,10 @@ class DynamicMediumPickCubeWithCollisionEnv(BaseEnv):
         velocity[:, 2] = v_vertical
         
         # Add small random variation while maintaining accuracy
-        velocity_noise = torch.randn_like(velocity) * 0.1
+        velocity_noise_array = self._episode_rng.normal(0, 0.1, size=(b, 3))
+        velocity_noise = torch.from_numpy(velocity_noise_array).to(
+            device=self.device, dtype=velocity.dtype
+        )
         velocity += velocity_noise
         
         # Apply velocity to ball

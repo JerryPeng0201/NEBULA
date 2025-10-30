@@ -2,12 +2,12 @@
 
 # Data Collection Script for NEBULA
 # This script runs motion planning data collection with the Panda robot
-
+cd ..
 CUDA_VISIBLE_DEVICES=0 python -m nebula.data.generation.motionplanning.panda.run \
-    -e Control-PlaceSphere-Easy \
+    -e Dynamic-PickCubeWithCollision-Medium \
     -o rgb+depth+segmentation \
     -n 10 \
     --render-mode sensors \
     --save-video \
-    --record-dir /HDD1/embodied_ai/data/Nebula/Nebula-demo \
+    --record-dir /HDD1/embodied_ai/data/Nebula/ \
     --subtask-idx 0
