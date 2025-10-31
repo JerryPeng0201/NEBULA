@@ -527,7 +527,20 @@ class SpatialHardKitchenAssemblyEnv(BaseEnv):
                 obj1 = self.kitchen_objects.get(step["objects"][0])
                 obj2 = self.kitchen_objects.get(step["objects"][1])
                 if obj1 and obj2:
-                    distance = torch.linalg.norm(obj1.pose.p[0][:2] - obj2.pose.p[0][:2])
+                    pos1 = obj1.pose.p
+                    pos2 = obj2.pose.p
+                    
+                    if pos1.dim() == 0:
+                        pos1 = pos1.unsqueeze(0).unsqueeze(0)
+                    elif pos1.dim() == 1:  # [3]
+                        pos1 = pos1.unsqueeze(0)  # -> [1, 3]
+                        
+                    if pos2.dim() == 0:
+                        pos2 = pos2.unsqueeze(0).unsqueeze(0)
+                    elif pos2.dim() == 1:
+                        pos2 = pos2.unsqueeze(0)
+                    
+                    distance = torch.linalg.norm(pos1[0, :2] - pos2[0, :2])
                     progress += max(0, 1.0 - distance / 0.5)
         return progress
 
