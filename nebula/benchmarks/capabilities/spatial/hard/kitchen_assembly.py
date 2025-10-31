@@ -154,8 +154,14 @@ class SpatialHardKitchenAssemblyEnv(BaseEnv):
 
     def _initialize_episode(self, env_idx: torch.Tensor, options: dict):
         with torch.device(self.device):
-            b = len(env_idx)
-            self.table_scene.initialize(env_idx)
+            
+            if env_idx.dim() == 0: 
+                env_idx = env_idx.unsqueeze(0)
+            
+            b = len(env_idx) if env_idx.numel() > 0 else 1
+            
+            if b == 0:
+                b = 1
 
             # Clean up previous objects
             if hasattr(self, 'kitchen_objects'):
@@ -237,6 +243,10 @@ class SpatialHardKitchenAssemblyEnv(BaseEnv):
 
     def _position_objects_randomly(self, b):
         """Position objects far apart"""
+        
+        if b == 0:
+            b = 1
+
         used_positions = []
         min_distance = 0.2
         
@@ -492,32 +502,29 @@ class SpatialHardKitchenAssemblyEnv(BaseEnv):
         return all_stable
 
     def compute_dense_reward(self, obs: Any, action: torch.Tensor, info: Dict):
-        total_reward = 0.0
+        reward = torch.zeros(self.num_envs, device=self.device, dtype=torch.float32)
         
         # Grasping reward
-        relevant_grasping = False
         for obj in self.kitchen_objects.values():
-            if self.agent.is_grasping(obj):
-                relevant_grasping = True
-                break
-        total_reward += 1.0 if relevant_grasping else 0.0
-
-        # Progress reward
+            is_grasping = self.agent.is_grasping(obj)
+            reward += is_grasping.float()
+            break
+        
         progress_reward = self._calculate_progress_reward()
-        total_reward += progress_reward
-
-        # Step completion reward
-        total_reward += info["steps_completed"] * 3.0
-
-        # Stability reward
-        if info["all_stable"]:
-            total_reward += 2.0
-
+        if isinstance(progress_reward, (int, float)):
+            reward += progress_reward
+        else:
+            reward += progress_reward
+        
+        reward += info["steps_completed"] * 3.0
+        
+        # Stability reward  
+        reward += 2.0 * info["all_stable"].float()
+        
         # Success reward
-        if info["success"]:
-            total_reward += 10.0
-
-        return total_reward
+        reward += 10.0 * info["success"].float()
+        
+        return reward
 
     def _calculate_progress_reward(self):
         """Calculate progress towards completing steps"""
