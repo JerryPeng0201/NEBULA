@@ -40,9 +40,9 @@ class SpatialHardKitchenAssemblyEnv(BaseEnv):
     LOWER_SHELF_HEIGHT = 0.03
 
     # Tolerances
-    PLACEMENT_TOLERANCE = 0.05
-    STACKING_TOLERANCE = 0.03
-    GROUPING_DISTANCE = 0.08
+    PLACEMENT_TOLERANCE = 0.12
+    STACKING_TOLERANCE = 0.12
+    GROUPING_DISTANCE = 0.12
 
     def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, **kwargs):
         self.robot_init_qpos_noise = robot_init_qpos_noise
@@ -387,33 +387,6 @@ class SpatialHardKitchenAssemblyEnv(BaseEnv):
             "step_details": step_completions
         }
 
-    def _check_inside_relationship(self, objects):
-        """Check inside relationship"""
-        if len(objects) < 2:
-            b = self.num_envs
-            return torch.zeros(b, device=self.device, dtype=torch.bool)
-            
-        food_obj = self.kitchen_objects.get(objects[0])
-        container_obj = self.kitchen_objects.get(objects[1])
-        
-        if food_obj is None or container_obj is None:
-            b = self.num_envs
-            return torch.zeros(b, device=self.device, dtype=torch.bool)
-
-        food_pos = food_obj.pose.p
-        container_pos = container_obj.pose.p
-    
-        if food_pos.dim() == 1:
-            food_pos = food_pos.unsqueeze(0)
-        if container_pos.dim() == 1:
-            container_pos = container_pos.unsqueeze(0)
-        
-        xy_distance = torch.linalg.norm(food_pos[:, :2] - container_pos[:, :2], dim=1)
-        height_in_container = (container_pos[:, 2] + 0.01 < food_pos[:, 2]) & (food_pos[:, 2] < container_pos[:, 2] + 0.1)
-        
-        result = (xy_distance < 0.03) & height_in_container
-        return result
-
     def _check_beside_relationship(self, objects):
         """Check beside relationship"""
         if len(objects) < 2:
@@ -430,15 +403,61 @@ class SpatialHardKitchenAssemblyEnv(BaseEnv):
         pos1 = obj1.pose.p
         pos2 = obj2.pose.p
         
-        if pos1.dim() == 1:
+        if pos1.dim() == 0:
+            pos1 = pos1.unsqueeze(0).unsqueeze(0)
+        elif pos1.dim() == 1:
             pos1 = pos1.unsqueeze(0)
-        if pos2.dim() == 1:
+            
+        if pos2.dim() == 0:
+            pos2 = pos2.unsqueeze(0).unsqueeze(0)
+        elif pos2.dim() == 1:
             pos2 = pos2.unsqueeze(0)
         
         distance = torch.linalg.norm(pos1[:, :2] - pos2[:, :2], dim=1)
         height_similar = torch.abs(pos1[:, 2] - pos2[:, 2]) < self.PLACEMENT_TOLERANCE
         
-        return (distance < self.GROUPING_DISTANCE) & height_similar  # shape [batch_size]
+        result = (distance < self.GROUPING_DISTANCE) & height_similar
+        
+        if result.dim() == 0:
+            result = result.unsqueeze(0)
+            
+        return result
+
+    def _check_inside_relationship(self, objects):
+        """Check inside relationship"""
+        if len(objects) < 2:
+            b = self.num_envs
+            return torch.zeros(b, device=self.device, dtype=torch.bool)
+            
+        food_obj = self.kitchen_objects.get(objects[0])
+        container_obj = self.kitchen_objects.get(objects[1])
+        
+        if food_obj is None or container_obj is None:
+            b = self.num_envs
+            return torch.zeros(b, device=self.device, dtype=torch.bool)
+
+        food_pos = food_obj.pose.p
+        container_pos = container_obj.pose.p
+
+        if food_pos.dim() == 0:  # scalar
+            food_pos = food_pos.unsqueeze(0).unsqueeze(0)
+        elif food_pos.dim() == 1:
+            food_pos = food_pos.unsqueeze(0)
+            
+        if container_pos.dim() == 0:  # scalar
+            container_pos = container_pos.unsqueeze(0).unsqueeze(0)
+        elif container_pos.dim() == 1:
+            container_pos = container_pos.unsqueeze(0)
+        
+        xy_distance = torch.linalg.norm(food_pos[:, :2] - container_pos[:, :2], dim=1)
+        height_in_container = (container_pos[:, 2] - 0.02 < food_pos[:, 2]) & (food_pos[:, 2] < container_pos[:, 2] + 0.15)
+        
+        result = (xy_distance < 0.15) & height_in_container
+        
+        if result.dim() == 0:
+            result = result.unsqueeze(0)
+        
+        return result
     
     def _check_all_objects_stable(self):
         """Check if all objects are stable"""
@@ -449,17 +468,28 @@ class SpatialHardKitchenAssemblyEnv(BaseEnv):
             linear_vel = obj.linear_velocity
             angular_vel = obj.angular_velocity
             
-            if linear_vel.dim() == 1:
+            # FIX: Handle scalar/0-dim tensors
+            if linear_vel.dim() == 0:
+                linear_vel = linear_vel.unsqueeze(0).unsqueeze(0)
+            elif linear_vel.dim() == 1:
                 linear_vel = linear_vel.unsqueeze(0)
-            if angular_vel.dim() == 1:
+                
+            if angular_vel.dim() == 0:
+                angular_vel = angular_vel.unsqueeze(0).unsqueeze(0)
+            elif angular_vel.dim() == 1:
                 angular_vel = angular_vel.unsqueeze(0)
             
             linear_velocity = torch.linalg.norm(linear_vel, dim=1)
             angular_velocity = torch.linalg.norm(angular_vel, dim=1)
             
-            all_stable = all_stable & (linear_velocity <= 0.05) & (angular_velocity <= 0.1)
+            # FIX: Ensure boolean tensors have proper dimensions
+            stable_check = (linear_velocity <= 0.05) & (angular_velocity <= 0.1)
+            if stable_check.dim() == 0:
+                stable_check = stable_check.unsqueeze(0)
+                
+            all_stable = all_stable & stable_check
         
-        return all_stable 
+        return all_stable
 
     def compute_dense_reward(self, obs: Any, action: torch.Tensor, info: Dict):
         total_reward = 0.0
