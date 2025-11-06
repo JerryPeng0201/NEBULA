@@ -112,8 +112,41 @@ q: quit and save data
 ```
 
 ---
+### 4. Data formatter
 
-### 4. Customization
+A provided data-formatter script merges recorded demos into a single organized folder using the following CLI arguments (see dataclass Args):
+
+- env_id / -e: environment id to reformat demos for (default: "ControlEasy-PlaceSphere")
+- record_dir: directory containing recorded data and optional videos (default: "demos")
+- num_episodes: maximum number of episodes to reformat (default: 100)
+- target_id: name of the organized folder for all collections (default: "0")
+- only_success: flag to include only successful episodes (default: False)
+
+What it does
+- Operates on copies only — original files and folders are preserved.
+- Collect video files (e.g., .mp4) (in folders); merge HDF5 recordings (.h5) and metadata (.json).
+- Reassigns and renumbers trajectory IDs so they are contiguous in the merged output.
+- Produces a new merged folder under record_dir named by target_id.
+
+Usage (example)
+- Basic command (include -e alias for env_id):
+
+```bash
+python -m nebula.data.generation.teleoperation.panda.data_formatter \
+  -e ControlEasy-PlaceSphere \
+  --record-dir /path/to/raw_data \
+  --num-episodes 100 \
+  --target-id 0 \
+  --only-success
+```
+
+Notes and expectations
+
+- A new directory `record_dir/teleop/tmp_<target_id>` will contain the merged episodes and updated metadata. You must manually remove the `tmp_` prefix from the folder and file names (.h5, .json) for better security.
+
+---
+
+### 5. Customization
 
 To adapt Nebula Teleoperation for a different robot, use the [Panda implementation](panda) as a reference. For each new robot, implement a local motion planner solver and/or a remote motion planner solver. The local solver can follow the approach in [Nebula Motion Planning data collection](../motionplanning/README.md). Update relevant files and configurations to ensure compatibility with your robot model and specific tasks.
 

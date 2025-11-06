@@ -68,7 +68,9 @@ def main(args: Args):
             control_mode="pd_joint_pos",
             render_mode="rgb_array",
             enable_shadow=True,
-            viewer_camera_configs=dict(shader_pack=args.viewer_shader)
+            sim_backend="cpu",
+            viewer_camera_configs=dict(shader_pack=args.viewer_shader),
+            reconfiguration_freq=1,
         )
         env = RecordEpisode(
             env,
@@ -132,8 +134,10 @@ def main(args: Args):
             control_mode="pd_joint_pos",
             render_mode="sensors",
             reward_mode="none",
+            sim_backend="cpu",
             human_render_camera_configs=dict(shader_pack=args.video_saving_shader),
             sensor_configs=dict(shader_pack=args.video_saving_shader),
+            reconfiguration_freq=1,
         )
         env = RecordEpisode(
                 env_gym,
