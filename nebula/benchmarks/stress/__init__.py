@@ -1,3 +1,4 @@
 from .adaptability_movingobj import AdaptationTestMovingCubeEnv
 from .adaptability_commandchange import InstructionChangeTestEnv
 from .adaptability_sequentialcommand import PickAndPlaceTestEnv
+from .sensor_sequentialcommand import SensorPickAndPlaceTestEnv
