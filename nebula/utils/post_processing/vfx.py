@@ -31,9 +31,6 @@ def _add_possion_gaussian_noise(cam_data, lam):
     tgt += poisson + gaussian
     tgt.clamp_(0.0, 255.0)
     cam_data.copy_(tgt.to(cam_data.dtype))
-    # show image for debug
-    # plt.imshow(cam_data[0].cpu().numpy().astype(np.uint8))
-    # plt.show()
     return cam_data
 
 def _add_rolling_shutter_effect(cam_data, ratio, direction="right", curve="sqrt"):
@@ -74,9 +71,6 @@ def _add_rolling_shutter_effect(cam_data, ratio, direction="right", curve="sqrt"
 
     # Apply skew
     cam_data.copy_(torch.gather(cam_data, dim=2, index=idx_cols))
-    # show image for debug
-    # plt.imshow(cam_data[0].cpu().numpy().astype(np.uint8))
-    # plt.show()
     return cam_data
 
 def _add_light_flicker_effect(cam_data, frequency, amplitude=0.1):
@@ -101,9 +95,6 @@ def _add_light_flicker_effect(cam_data, frequency, amplitude=0.1):
     tgt = cam_data.float() * flicker
     tgt.clamp_(0.0, 255.0)
     cam_data.copy_(tgt.to(cam_data.dtype))
-    # show image for debug
-    # plt.imshow(cam_data[0].cpu().numpy().astype(np.uint8))
-    # plt.show()
     return cam_data
 
 def _add_resolution_degradation(cam_data, scale_factor):
@@ -136,9 +127,6 @@ def _add_resolution_degradation(cam_data, scale_factor):
     else:
         x_up = x_up.to(dtype=cam_data.dtype)
     cam_data.copy_(x_up.permute(0, 2, 3, 1).contiguous())
-    # show image for debug
-    # plt.imshow(cam_data[0].cpu().numpy().astype(np.uint8))
-    # plt.show()
     return cam_data
 
 def _add_frame_drop_effect(cam_data, drop_rate):
@@ -154,9 +142,6 @@ def _add_frame_drop_effect(cam_data, drop_rate):
         return cam_data 
     if np.random.rand() < drop_rate:
         cam_data.zero_()
-    #show image for debug
-    # plt.imshow(cam_data[0].cpu().numpy().astype(np.uint8))
-    # plt.show()
     return cam_data
 
 def _add_color_shift_effect(cam_data, rgb_value):
@@ -182,9 +167,6 @@ def _add_color_shift_effect(cam_data, rgb_value):
     tmp.add_(shift)
     tmp.clamp_(0.0, 255.0)
     cam_data.copy_(tmp.to(dtype=cam_data.dtype))
-    # show image for debug
-    # plt.imshow(cam_data[0].cpu().numpy().astype(np.uint8))
-    # plt.show()
     return cam_data
     
 
@@ -196,7 +178,7 @@ post_process_func_hash = {"pg_noise":_add_possion_gaussian_noise,
                          "color_shift": _add_color_shift_effect
             }
 
-def obs_filter(fn=None,*, post_process_mode=None):
+def obs_filter(fn=None,*, post_process_method: str| list[str] =None):
      
     def _decorator(step_fn):
         """Post-process only the observation part of `step`."""
@@ -207,17 +189,19 @@ def obs_filter(fn=None,*, post_process_mode=None):
             assert isinstance(self, BaseEnv), "obs_filter must wrap BaseEnv.step overrides"
         
             obs, reward, terminated, truncated, info = step_fn(self, action)
-            if post_process_mode is not None:
-                
-                ppm_data = _post_process_mode_parser(post_process_mode)
-
+            if post_process_method is not None:
                 for cam_name in obs['sensor_data'].keys():
-               
-                    cam_data = obs['sensor_data'][cam_name][ppm_data['mode']]
-                    
-                    pp_function = post_process_func_hash.get(ppm_data['post_processes'])
+                    for post_process_mode in post_process_method:
+                        ppm_data = _post_process_mode_parser(post_process_mode)
 
-                    obs['sensor_data'][cam_name][ppm_data['mode']] = pp_function(cam_data,ppm_data['degree'])
+                        cam_data = obs['sensor_data'][cam_name][ppm_data['mode']]
+                        
+                        pp_function = post_process_func_hash.get(ppm_data['post_processes'])
+
+                        obs['sensor_data'][cam_name][ppm_data['mode']] = pp_function(cam_data,ppm_data['degree'])
+                        # # show image for debug
+                        # plt.imshow(obs['sensor_data'][cam_name][ppm_data['mode']][0].cpu().numpy().astype(np.uint8))
+                        # plt.show()
             return obs, reward, terminated, truncated, info
         
         return wrapper

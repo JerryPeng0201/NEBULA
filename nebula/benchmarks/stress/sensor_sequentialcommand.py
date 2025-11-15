@@ -173,7 +173,10 @@ class SensorPickAndPlaceTestEnv(BaseEnv):
             q = torch.tensor([1.0, 0.0, 0.0, 0.0], device=self.device).repeat(b, 1)
             self.cube.set_pose(Pose.create_from_pq(p=cube_xyz, q=q))
     
-    @obs_filter(post_process_mode="rgb+pg_noise+1")
+    # ! add observation filter for post-processing
+    # @obs_filter(post_process_method="rgb+color_shift+0,100,0")
+    # mutilple filter applied accoring the order in post_process_mode
+    @obs_filter(post_process_method=["rgb+color_shift+0,100,0","rgb+light_flicker+50"])
     def step(self, action):
         """Override step to change instruction when cube is lifted"""
         obs, reward, terminated, truncated, info = super().step(action)
