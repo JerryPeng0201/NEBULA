@@ -183,8 +183,8 @@ def _add_color_shift_effect(cam_data, rgb_value):
     tmp.clamp_(0.0, 255.0)
     cam_data.copy_(tmp.to(dtype=cam_data.dtype))
     # show image for debug
-    plt.imshow(cam_data[0].cpu().numpy().astype(np.uint8))
-    plt.show()
+    # plt.imshow(cam_data[0].cpu().numpy().astype(np.uint8))
+    # plt.show()
     return cam_data
     
 
