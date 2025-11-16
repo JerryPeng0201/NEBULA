@@ -13,7 +13,7 @@ from nebula.utils.scene_builder.table import TableSceneBuilder
 from nebula.utils.structs.pose import Pose
 from nebula.utils.structs.types import Array, GPUMemoryConfig, SimConfig
 from nebula.utils.post_processing.latency import latency_filter
-POST_PROCESSING_METHOD : str| list[str] = ["packet_drop+0.2"]
+
 @register_env("Latency-PickAndPlace", max_episode_steps=150)
 class LatencyPickAndPlaceTestEnv(BaseEnv):
     """
@@ -31,8 +31,7 @@ class LatencyPickAndPlaceTestEnv(BaseEnv):
     
     def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, post_process_method=["packet_drop+0.2"],**kwargs):
         self.robot_init_qpos_noise = robot_init_qpos_noise
-        global POST_PROCESSING_METHOD
-        POST_PROCESSING_METHOD = post_process_method
+        self.post_processing_method = post_process_method
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
     
     @property
@@ -179,7 +178,7 @@ class LatencyPickAndPlaceTestEnv(BaseEnv):
     # ! add lantency filter for post-processing
     # @obs_filter(post_process_method="latency+2")
     # mutilple filter applied accoring the order in post_process_mode
-    @latency_filter(post_process_method=POST_PROCESSING_METHOD)
+    @latency_filter()
     def step(self, action):
         """Override step to change instruction when cube is lifted"""
         obs, reward, terminated, truncated, info = super().step(action)

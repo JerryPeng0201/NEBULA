@@ -67,7 +67,7 @@ post_process_func_hash = {"latency":_add_latency,
                          "packet_drop": _add_packet_drop
                          }
 
-def latency_filter(fn=None,*, post_process_method: str| list[str] =None):
+def latency_filter(fn=None):
     def _decorator(step_fn):
         """Post-process only the action part of `step`."""
         @wraps(step_fn)
@@ -75,10 +75,10 @@ def latency_filter(fn=None,*, post_process_method: str| list[str] =None):
             # get process ID
             pid = id(self)
             # parse post process method
-            if isinstance(post_process_method, str):
-                ppm_list = [post_process_method]
+            if isinstance(self.post_processing_method, str):
+                ppm_list = [self.post_processing_method]
             else:
-                ppm_list = post_process_method
+                ppm_list = self.post_processing_method
             for ppm in ppm_list:
                 ppm_data = _post_process_mode_parser(ppm)
                 p_process_name = ppm_data['post_processes']

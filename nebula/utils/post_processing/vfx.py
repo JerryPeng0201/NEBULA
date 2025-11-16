@@ -25,6 +25,7 @@ def _add_possion_gaussian_noise(cam_data, lam):
     """
     # cam_data.shape = torch.Size([1, 512, 512, 3])
     tgt = cam_data.float()
+    lam = float(lam)
     lam_tensor = torch.clamp(tgt / 255.0 * lam, min=0.0)   # λ control here
     poisson = torch.poisson(lam_tensor)
     gaussian = torch.normal(mean=0.0, std=lam, size=tgt.shape, device=tgt.device)
@@ -178,7 +179,7 @@ post_process_func_hash = {"pg_noise":_add_possion_gaussian_noise,
                          "color_shift": _add_color_shift_effect
             }
 
-def obs_filter(fn=None,*, post_process_method: str| list[str] =None):
+def obs_filter(fn=None):
      
     def _decorator(step_fn):
         """Post-process only the observation part of `step`."""
@@ -189,9 +190,13 @@ def obs_filter(fn=None,*, post_process_method: str| list[str] =None):
             assert isinstance(self, BaseEnv), "obs_filter must wrap BaseEnv.step overrides"
         
             obs, reward, terminated, truncated, info = step_fn(self, action)
-            if post_process_method is not None:
+            if self.post_processing_method is not None:
+                if isinstance(self.post_processing_method, str):
+                    ppm_list = [self.post_processing_method]
+                else:
+                    ppm_list = self.post_processing_method
                 for cam_name in obs['sensor_data'].keys():
-                    for post_process_mode in post_process_method:
+                    for post_process_mode in ppm_list:
                         ppm_data = _post_process_mode_parser(post_process_mode)
 
                         cam_data = obs['sensor_data'][cam_name][ppm_data['mode']]

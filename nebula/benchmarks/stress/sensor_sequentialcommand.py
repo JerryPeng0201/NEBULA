@@ -13,7 +13,7 @@ from nebula.utils.scene_builder.table import TableSceneBuilder
 from nebula.utils.structs.pose import Pose
 from nebula.utils.structs.types import Array, GPUMemoryConfig, SimConfig
 from nebula.utils.post_processing.vfx import obs_filter
-POST_PROCESSING_METHOD : str| list[str] = ["rgb+light_flicker+50"]  
+
 @register_env("Sensor-PickAndPlace", max_episode_steps=150)
 class SensorPickAndPlaceTestEnv(BaseEnv):
     """
@@ -25,15 +25,12 @@ class SensorPickAndPlaceTestEnv(BaseEnv):
     """
     
     SUPPORTED_ROBOTS = ["panda", "fetch"]
-    SUPPORTED_REWARD_MODES = ["none", "sparse", "dense"]
-    
+    SUPPORTED_REWARD_MODES = ["none", "sparse", "dense"] 
     agent: Union[Panda, Fetch]
     
     def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, post_process_method=["rgb+light_flicker+50"] ,**kwargs):
         self.robot_init_qpos_noise = robot_init_qpos_noise
-        global POST_PROCESSING_METHOD
-        POST_PROCESSING_METHOD = post_process_method
-        print("POST_PROCESSING_METHOD:", POST_PROCESSING_METHOD)
+        self.post_processing_method = post_process_method
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
     
     @property
@@ -181,7 +178,7 @@ class SensorPickAndPlaceTestEnv(BaseEnv):
     # @obs_filter(post_process_method="rgb+color_shift+0,100,0")
     # mutilple filter applied accoring the order in post_process_mode
     
-    @obs_filter(post_process_method=POST_PROCESSING_METHOD)
+    @obs_filter()
     def step(self, action):
         """Override step to change instruction when cube is lifted"""
         obs, reward, terminated, truncated, info = super().step(action)
