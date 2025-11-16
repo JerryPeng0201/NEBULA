@@ -13,7 +13,7 @@ from nebula.utils.scene_builder.table import TableSceneBuilder
 from nebula.utils.structs.pose import Pose
 from nebula.utils.structs.types import Array, GPUMemoryConfig, SimConfig
 from nebula.utils.post_processing.latency import latency_filter
-global POST_PROCESSING_METHOD
+POST_PROCESSING_METHOD : str| list[str] = ["packet_drop+0.2"]
 @register_env("Latency-PickAndPlace", max_episode_steps=150)
 class LatencyPickAndPlaceTestEnv(BaseEnv):
     """
@@ -29,7 +29,7 @@ class LatencyPickAndPlaceTestEnv(BaseEnv):
     
     agent: Union[Panda, Fetch]
     
-    def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, post_process_method=["packet_drop+0.8"],**kwargs):
+    def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, post_process_method=["packet_drop+0.2"],**kwargs):
         self.robot_init_qpos_noise = robot_init_qpos_noise
         global POST_PROCESSING_METHOD
         POST_PROCESSING_METHOD = post_process_method

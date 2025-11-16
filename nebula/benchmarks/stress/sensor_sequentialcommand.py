@@ -13,7 +13,7 @@ from nebula.utils.scene_builder.table import TableSceneBuilder
 from nebula.utils.structs.pose import Pose
 from nebula.utils.structs.types import Array, GPUMemoryConfig, SimConfig
 from nebula.utils.post_processing.vfx import obs_filter
-global POST_PROCESSING_METHOD
+POST_PROCESSING_METHOD : str| list[str] = ["rgb+light_flicker+50"]  
 @register_env("Sensor-PickAndPlace", max_episode_steps=150)
 class SensorPickAndPlaceTestEnv(BaseEnv):
     """
@@ -33,6 +33,7 @@ class SensorPickAndPlaceTestEnv(BaseEnv):
         self.robot_init_qpos_noise = robot_init_qpos_noise
         global POST_PROCESSING_METHOD
         POST_PROCESSING_METHOD = post_process_method
+        print("POST_PROCESSING_METHOD:", POST_PROCESSING_METHOD)
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
     
     @property
@@ -179,6 +180,7 @@ class SensorPickAndPlaceTestEnv(BaseEnv):
     # ! add observation filter for post-processing
     # @obs_filter(post_process_method="rgb+color_shift+0,100,0")
     # mutilple filter applied accoring the order in post_process_mode
+    
     @obs_filter(post_process_method=POST_PROCESSING_METHOD)
     def step(self, action):
         """Override step to change instruction when cube is lifted"""
