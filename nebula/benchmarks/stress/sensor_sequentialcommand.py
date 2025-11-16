@@ -177,6 +177,10 @@ class SensorPickAndPlaceTestEnv(BaseEnv):
     # ! add observation filter for post-processing
     # @obs_filter(post_process_method="rgb+color_shift+0,100,0")
     # mutilple filter applied accoring the order in post_process_mode
+    @obs_filter()
+    def reset(self, seed: Union[None, int, list[int]] = None, options: Union[None, dict] = None):
+        obs, info = super().reset(seed=seed, options=options)
+        return obs, info
     
     @obs_filter()
     def step(self, action):

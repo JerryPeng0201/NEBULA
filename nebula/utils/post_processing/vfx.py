@@ -4,7 +4,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
-
+from typing import Any, Dict, Union
 def _post_process_mode_parser(mode_str):
     """
     Parse post process mode string into a set of processing flags.
@@ -64,11 +64,12 @@ def _add_rolling_shutter_effect(cam_data, ratio, direction="right", curve="sqrt"
         raise ValueError("curve must be 'linear', 'sqrt', or 'square'")
     offsets = (t * max_shift).round().to(torch.long)  # [H]
 
-    # Build clamped gather indices (edge replication, no wrap)
+    # Build wraparound indices (no clamp; modulo wraps tail to front)
     sign = 1 if direction == "right" else -1
     base_cols = torch.arange(W, device=cam_data.device).view(1, 1, W, 1)   # [1,1,W,1]
     per_row = (offsets.view(1, H, 1, 1) * sign)                             # [1,H,1,1]
-    idx_cols = (base_cols - per_row).clamp_(0, W - 1).expand(B, H, W, C).long()
+    idx_cols = (base_cols - per_row) % W                                    # wrap
+    idx_cols = idx_cols.expand(B, H, W, C).long()
 
     # Apply skew
     cam_data.copy_(torch.gather(cam_data, dim=2, index=idx_cols))
@@ -184,12 +185,15 @@ def obs_filter(fn=None):
     def _decorator(step_fn):
         """Post-process only the observation part of `step`."""
         @wraps(step_fn)
-        def wrapper(self, action):
-            # assert fn heritages from BaseEnv.step
-            assert step_fn.__name__ == "step", "obs_filter can only decorate step() implementations"
+        def wrapper(self, action= None, seed: Union[None, int, list[int]] = None, options: Union[None, dict] = None):
+            # assert fn heritages from BaseEnv.step or BaseEnv.reset
+            assert step_fn.__name__ == "step" or step_fn.__name__ == "reset", "obs_filter can only decorate step() or reset() implementations"
             assert isinstance(self, BaseEnv), "obs_filter must wrap BaseEnv.step overrides"
-        
-            obs, reward, terminated, truncated, info = step_fn(self, action)
+            if step_fn.__name__ == "reset":
+                obs, info = step_fn(self, seed=seed, options=options)
+            elif step_fn.__name__ == "step":    
+                obs, reward, terminated, truncated, info = step_fn(self, action)
+            
             if self.post_processing_method is not None:
                 if isinstance(self.post_processing_method, str):
                     ppm_list = [self.post_processing_method]
@@ -207,7 +211,11 @@ def obs_filter(fn=None):
                         # # show image for debug
                         # plt.imshow(obs['sensor_data'][cam_name][ppm_data['mode']][0].cpu().numpy().astype(np.uint8))
                         # plt.show()
-            return obs, reward, terminated, truncated, info
+            
+            if step_fn.__name__ == "reset":
+                return obs, info
+            elif step_fn.__name__ == "step":
+                return obs, reward, terminated, truncated, info
         
         return wrapper
     
