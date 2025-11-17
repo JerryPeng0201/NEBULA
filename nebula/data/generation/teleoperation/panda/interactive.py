@@ -64,7 +64,7 @@ def main(args: Args):
 
         env = gym.make(
             args.env_id,
-            obs_mode='none',
+            obs_mode='rgb',
             control_mode="pd_joint_pos",
             render_mode="rgb_array",
             enable_shadow=True,
