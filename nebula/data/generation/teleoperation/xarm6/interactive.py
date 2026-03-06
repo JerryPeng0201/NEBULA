@@ -31,10 +31,10 @@ from copy import deepcopy
 
 @dataclass
 class Args:
-    env_id: Annotated[str, tyro.conf.arg(aliases=["-e"])] = "ControlEasy-PlaceSphere-Easy"
+    env_id: Annotated[str, tyro.conf.arg(aliases=["-e"])] = "Control-PlaceSphere-Easy"
     obs_mode: str = "none"
-    robot_uid: Annotated[str, tyro.conf.arg(aliases=["-r"])] = "panda"
-    """The robot to use. Robot setups supported for teleop in this script are panda and panda_stick"""
+    robot_uid: Annotated[str, tyro.conf.arg(aliases=["-r"])] = "xarm6_gripper_g2"
+    """The robot to use. Robot setups supported for teleop in this script are xarm6 robotiq variants, xarm7_ability, and panda variants."""
     record_dir: str = "demos"
     """directory to record the demonstration data and optionally videos"""
     save_video: bool = True
@@ -71,6 +71,7 @@ def main(args: Args):
             sim_backend="cpu",
             viewer_camera_configs=dict(shader_pack=args.viewer_shader),
             reconfiguration_freq=1,
+            robot_uids=args.robot_uid,
         )
         env = RecordEpisode(
             env,
@@ -138,6 +139,7 @@ def main(args: Args):
             human_render_camera_configs=dict(shader_pack=args.video_saving_shader),
             sensor_configs=dict(shader_pack=args.video_saving_shader),
             reconfiguration_freq=1,
+            robot_uids=args.robot_uid,
         )
         env = RecordEpisode(
                 env_gym,
@@ -209,37 +211,35 @@ def solve(env: BaseEnv,args: Args, debug=False, vis=False,):
     assert env.unwrapped.control_mode in ["pd_joint_pos", "pd_joint_pos_vel"], env.unwrapped.control_mode
     robot_has_gripper = False
 
-    if env.unwrapped.robot_uids == "panda_stick":
-        if use_remote:
-            from nebula.data.generation.teleoperation.panda.remote_motionplanner import RemotePandaArmMotionPlanningSolver as RemoteStick  # or make a stick version if needed
-            planner = RemoteStick(env, debug=debug, vis=vis, base_pose=env.unwrapped.agent.robot.pose, visualize_target_grasp_pose=False,
-                                  print_env_info=False, joint_acc_limits=0.5, joint_vel_limits=0.5, grpc_addr=grpc_addr)
-        else:
-            # currently not supporting a local motion planner for the panda stick variant
-            from nebula.data.generation.motionplanning.panda.motionplanner_stick import PandaStickMotionPlanningSolver
-            planner = PandaStickMotionPlanningSolver(env, debug=debug, vis=vis, base_pose=env.unwrapped.agent.robot.pose,
-                                                     visualize_target_grasp_pose=False, print_env_info=False,
-                                                     joint_acc_limits=0.5, joint_vel_limits=0.5)
-    elif env.unwrapped.robot_uids in ["panda", "panda_wristcam"]:
+    if env.unwrapped.robot_uids in ["xarm6_gripper_g2"]:
         robot_has_gripper = True
+        # mplib uses the move group name from the SRDF, so force the correct value for xarm6 robots.
+        setattr(env.unwrapped.agent, "mplib_move_group", "xarm6")
+        planner_kwargs = dict(
+            env=env,
+            debug=debug,
+            vis=vis,
+            base_pose=env.unwrapped.agent.robot.pose,
+            visualize_target_grasp_pose=False,
+            print_env_info=False,
+            joint_acc_limits=0.5,
+            joint_vel_limits=0.5,
+        )
         if use_remote:
-            from nebula.data.generation.teleoperation.panda.remote_motionplanner import RemotePandaArmMotionPlanningSolver
-            planner = RemotePandaArmMotionPlanningSolver(env, debug=debug, vis=vis, base_pose=env.unwrapped.agent.robot.pose,
-                                                         visualize_target_grasp_pose=False, print_env_info=False,
-                                                         joint_acc_limits=0.5, joint_vel_limits=0.5, grpc_addr=grpc_addr)
+            from nebula.data.generation.teleoperation.xarm6.remote_motionplanner import RemoteXArmMotionPlanningSolver
+            planner = RemoteXArmMotionPlanningSolver(**planner_kwargs, grpc_addr=grpc_addr)
         else:
-            from nebula.data.generation.teleoperation.panda.local_motionplanner import PandaArmMotionPlanningSolver
-            planner = PandaArmMotionPlanningSolver(env, debug=debug, vis=vis, base_pose=env.unwrapped.agent.robot.pose,
-                                                   visualize_target_grasp_pose=False, print_env_info=False,
-                                                   joint_acc_limits=0.5, joint_vel_limits=0.5)
+            from nebula.data.generation.teleoperation.xarm6.local_motionplanner import XArmMotionPlanningSolver
+            planner = XArmMotionPlanningSolver(**planner_kwargs)
 
     viewer = env.render_human()
 
     last_checkpoint_state = None
     gripper_open = True
-    def select_panda_hand():
-        viewer.select_entity(sapien_utils.get_obj_by_name(env.agent.robot.links, "panda_hand")._objs[0].entity)
-    select_panda_hand()
+
+    def select_end_effector():
+        viewer.select_entity(sapien_utils.get_obj_by_name(env.agent.robot.links, "xarm_gripper_base_link")._objs[0].entity)
+    select_end_effector()
     for plugin in viewer.plugins:
         if isinstance(plugin, sapien.utils.viewer.viewer.TransformWindow):
             transform_window = plugin
@@ -256,14 +256,14 @@ def solve(env: BaseEnv,args: Args, debug=False, vis=False,):
             print("""Available commands:
             h: print this help menu
             g: toggle gripper to close/open (if there is a gripper)
-            u: move the panda hand up
-            j: move the panda hand down
+            u: move the end effector up
+            j: move the end effector down
             k: rotate the grasp pose clockwise in Yaw
             l: rotate the grasp pose counter-clockwise in Yaw
             i: rotate the grasp pose clockwise in Pitch
             o: rotate the grasp pose counter-clockwise in Pitch
-            arrow_keys: move the panda hand in the direction of the arrow keys
-            n: execute command via motion planning to make the robot move to the target pose indicated by the ghost panda arm
+            arrow_keys: move the end effector in the direction of the arrow keys
+            n: execute command via motion planning to make the robot move to the target pose indicated by the ghost end effector
             c: stop this episode and record the trajectory and move on to a new episode
             q: quit the script and stop collecting data. Save trajectories and optionally videos.
             """)
@@ -300,28 +300,28 @@ def solve(env: BaseEnv,args: Args, debug=False, vis=False,):
             print(f"Reward: {reward}, Info: {info}")
         
         elif viewer.window.key_press("k"):
-            select_panda_hand()
+            select_end_effector()
             # Rotate 1 degree Yaw the grasp pose
             xyz_angles = torch.tensor([0, 0, np.pi/90])  # Roll, Pitch, Yaw angles in radians
             newq = matrix_to_quaternion(euler_angles_to_matrix(xyz_angles, convention="XYZ"))
             transform_window.gizmo_matrix = (transform_window._gizmo_pose * sapien.Pose(p=[0, 0, 0],q=newq)).to_transformation_matrix()
             transform_window.update_ghost_objects()
         elif viewer.window.key_press("l"):
-            select_panda_hand()
+            select_end_effector()
             # Rotate 1 degree Yaw the grasp pose
             xyz_angles = torch.tensor([0, 0, -np.pi/90])  # Roll, Pitch, Yaw angles in radians
             newq = matrix_to_quaternion(euler_angles_to_matrix(xyz_angles, convention="XYZ"))
             transform_window.gizmo_matrix = (transform_window._gizmo_pose * sapien.Pose(p=[0, 0, 0],q=newq)).to_transformation_matrix()
             transform_window.update_ghost_objects()
         elif viewer.window.key_press("i"):
-            select_panda_hand()
+            select_end_effector()
             # Rotate 1 degree Pitch the grasp pose
             xyz_angles = torch.tensor([0, np.pi/90, 0])  # Roll, Pitch, Yaw angles in radians
             newq = matrix_to_quaternion(euler_angles_to_matrix(xyz_angles, convention="XYZ"))
             transform_window.gizmo_matrix = (transform_window._gizmo_pose * sapien.Pose(p=[0, 0, 0],q=newq)).to_transformation_matrix()
             transform_window.update_ghost_objects()
         elif viewer.window.key_press("o"):
-            select_panda_hand()
+            select_end_effector()
             # Rotate 1 degree Pitch the grasp pose
             xyz_angles = torch.tensor([0, -np.pi/90, 0])  # Roll, Pitch, Yaw angles in radians
             newq = matrix_to_quaternion(euler_angles_to_matrix(xyz_angles, convention="XYZ"))
@@ -329,35 +329,31 @@ def solve(env: BaseEnv,args: Args, debug=False, vis=False,):
             transform_window.update_ghost_objects()
 
         elif viewer.window.key_press("u"):
-            select_panda_hand()
+            select_end_effector()
             transform_window.gizmo_matrix = (transform_window._gizmo_pose * sapien.Pose(p=[0, 0, -0.01])).to_transformation_matrix()
             transform_window.update_ghost_objects()
         elif viewer.window.key_press("j"):
-            select_panda_hand()
+            select_end_effector()
             transform_window.gizmo_matrix = (transform_window._gizmo_pose * sapien.Pose(p=[0, 0, +0.01])).to_transformation_matrix()
             transform_window.update_ghost_objects()
         elif viewer.window.key_press("down"):
-            select_panda_hand()
+            select_end_effector()
             transform_window.gizmo_matrix = (transform_window._gizmo_pose * sapien.Pose(p=[+0.01, 0, 0])).to_transformation_matrix()
             transform_window.update_ghost_objects()
         elif viewer.window.key_press("up"):
-            select_panda_hand()
+            select_end_effector()
             transform_window.gizmo_matrix = (transform_window._gizmo_pose * sapien.Pose(p=[-0.01, 0, 0])).to_transformation_matrix()
             transform_window.update_ghost_objects()
         elif viewer.window.key_press("right"):
-            select_panda_hand()
+            select_end_effector()
             transform_window.gizmo_matrix = (transform_window._gizmo_pose * sapien.Pose(p=[0, -0.01, 0])).to_transformation_matrix()
             transform_window.update_ghost_objects()
         elif viewer.window.key_press("left"):
-            select_panda_hand()
+            select_end_effector()
             transform_window.gizmo_matrix = (transform_window._gizmo_pose * sapien.Pose(p=[0, +0.01, 0])).to_transformation_matrix()
             transform_window.update_ghost_objects()
         if execute_current_pose:
-            # z-offset of end-effector gizmo to TCP position is hardcoded for the panda robot here
-            if env.unwrapped.robot_uids == "panda" or env.unwrapped.robot_uids == "panda_wristcam":
-                result = planner.move_to_pose_with_screw(transform_window._gizmo_pose * sapien.Pose([0, 0, 0.1]), dry_run=True)
-            elif env.unwrapped.robot_uids == "panda_stick":
-                result = planner.move_to_pose_with_screw(transform_window._gizmo_pose * sapien.Pose([0, 0, 0.15]), dry_run=True)
+            result = planner.move_to_pose_with_screw(transform_window._gizmo_pose * sapien.Pose([0, 0, 0.01]), dry_run=True)
             if result != -1 and len(result["position"]) < 150:
                 _, reward, _ ,_, info = planner.follow_path(result)
                 print(f"Reward: {reward}, Info: {info}")

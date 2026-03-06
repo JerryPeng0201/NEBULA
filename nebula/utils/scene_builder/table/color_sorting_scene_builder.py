@@ -172,6 +172,7 @@ class ColorSortingTableSceneBuilder(SceneBuilder):
             "xarm6_allegro_right", 
             "xarm6_robotiq",
             "xarm6_nogripper",
+            "xarm6_gripper_g2",
         ]:
             qpos = self.env.agent.keyframes["rest"].qpos
             qpos = (

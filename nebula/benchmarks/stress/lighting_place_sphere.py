@@ -9,8 +9,7 @@ import torch.random
 from transforms3d.euler import euler2quat
 from scipy.spatial.transform import Rotation as R
 
-from nebula.core.embodiment.robots import Fetch, Panda, XArm6GripperG2
-from nebula.core.embodiment.robots.xarm6 import xarm6_gripper_g2
+from nebula.core.embodiment.robots import Fetch, Panda
 from nebula.core.simulation.engine import BaseEnv
 from nebula.core.simulation.utils import randomization
 from nebula.core.sensors.camera import CameraConfig
@@ -20,10 +19,10 @@ from nebula.utils.registration import register_env
 from nebula.utils.scene_builder.table import TableSceneBuilder
 from nebula.utils.structs import Pose
 from nebula.utils.structs.types import Array, GPUMemoryConfig, SimConfig
+from nebula.utils.post_processing.vfx import obs_filter
 
-
-@register_env("Control-PlaceSphere-Easy", max_episode_steps=50)
-class ControlPlaceSphereEasyEnv(BaseEnv):
+@register_env("Lighting-PlaceSphere-Easy", max_episode_steps=50)
+class LightingPlaceSphereEasyEnv(BaseEnv):
     """
     **Task Description:**
     Place the blue sphere into the shallow bin.
@@ -36,15 +35,10 @@ class ControlPlaceSphereEasyEnv(BaseEnv):
     - The sphere is placed on the top of the bin. The robot remains static and the gripper is not closed at the end state.
     """
 
-    SUPPORTED_ROBOTS = ["panda", "fetch","xarm6_gripper_g2"]
+    SUPPORTED_ROBOTS = ["panda", "fetch"]
 
     # Specify some supported robot types
-    agent: Union[Panda, Fetch, XArm6GripperG2]
-
-    hand_camera_link = {
-        "panda": "panda_hand_tcp",
-        "xarm6_gripper_g2": "eef",
-    }
+    agent: Union[Panda, Fetch]
 
     # set some commonly used values
     radius = 0.02  # radius of the sphere
@@ -61,8 +55,16 @@ class ControlPlaceSphereEasyEnv(BaseEnv):
         2 * short_side_half_size,
     ]  # The edge block of the bin, which is smaller. The representations are similar to the above one
 
-    def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, **kwargs):
+    def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, lighting_config={'illumination_factor': 1.0,
+                                                                                               'temperature': 6500,
+                                                                                               'd_light_variation': True}, **kwargs):
         self.robot_init_qpos_noise = robot_init_qpos_noise
+        self.lighting_config = lighting_config
+        # check lighting_config keys are valid
+        valid_keys = ['illumination_factor', 'temperature', 'd_light_variation']
+        for key in lighting_config.keys():
+            if key not in valid_keys:
+                raise ValueError(f"Invalid key '{key}' in lighting_config. Valid keys are {valid_keys}.") 
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
 
     @property
@@ -96,7 +98,7 @@ class ControlPlaceSphereEasyEnv(BaseEnv):
             fov=np.pi / 2,
             near=0.01,
             far=100,
-            mount=self.agent.robot.links_map[self.hand_camera_link[self.agent.uid]],
+            mount=self.agent.robot.links_map["panda_hand_tcp"],
         )
 
         # Back right camera
@@ -200,6 +202,18 @@ class ControlPlaceSphereEasyEnv(BaseEnv):
 
         # print("Available robot links:", list(self.agent.robot.links_map.keys()))
         # breakpoint()
+    
+    def _load_lighting(self, options: dict):
+        """Loads lighting into the scene. Called by `self._reconfigure`. If not overriden will set some simple default lighting"""
+
+        shadow = self.enable_shadow
+        self.scene.set_ambient_light([0.3, 0.3, 0.3])
+        self.scene.add_directional_light(
+            [1, 1, -1], [1, 1, 1], shadow=shadow, shadow_scale=5, shadow_map_size=2048
+        )
+        self.scene.add_point_light([2, 2, 2], [1, 1, 1])
+        self.scene.add_point_light([2, -2, 2], [1, 1, 1])
+        self.scene.add_directional_light([0, 0, -1], [1, 1, 1])
 
     def _load_scene(self, options: dict):
         # load the table
@@ -249,7 +263,7 @@ class ControlPlaceSphereEasyEnv(BaseEnv):
             q = [1, 0, 0, 0]
             bin_pose = Pose.create_from_pq(p=pos, q=q)
             self.bin.set_pose(bin_pose)
-
+    
     def evaluate(self):
         pos_obj = self.obj.pose.p
         pos_bin = self.bin.pose.p

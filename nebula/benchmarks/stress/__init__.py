@@ -5,3 +5,4 @@ from .sensor_sequentialcommand import SensorPickAndPlaceTestEnv
 from .sensor_place_sphere import SensorPlaceSphereEasyEnv
 from .latency_sequentialcommand import LatencyPickAndPlaceTestEnv
 from .latency_place_sphere import LatencyPlaceSphereEasyEnv
+from .lighting_place_sphere import LightingPlaceSphereEasyEnv
