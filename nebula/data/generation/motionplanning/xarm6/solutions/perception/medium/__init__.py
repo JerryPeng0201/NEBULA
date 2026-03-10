@@ -1,0 +1,3 @@
+from .pick_diffcubes import PerceptionPickDiffCubesMediumSolution
+from .pick_redT import PerceptionPickRedTMediumSolution
+from .pick_whitePeg import PerceptionPickWhitePegMediumSolution

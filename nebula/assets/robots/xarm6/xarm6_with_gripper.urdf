@@ -240,7 +240,7 @@
       <geometry>
         <mesh filename="realsense2_description/meshes/d415.stl"/>
       </geometry>
-      <material name="aluminum"/>
+      <material name="Silver"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="-0.0125 -0.02 0"/>

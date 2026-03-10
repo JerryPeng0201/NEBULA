@@ -24,4 +24,4 @@ from .panda import *
 #from .widowx import *
 #from .widowxai import *
 #from .xarm import XArm7Ability
-#from .xarm6 import *
+from .xarm6 import XArm6GripperG2

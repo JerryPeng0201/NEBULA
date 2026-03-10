@@ -1,0 +1,3 @@
+from .pick_redT import PerceptionPickRedTHardSolution
+from .pick_rightCubes import PerceptionPickRightCubesHardSolution
+from .pick_peg import PerceptionPickPegHardSolution

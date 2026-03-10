@@ -1,0 +1,3 @@
+from .peg_insertion import ControlPegInsertionSideMediumSolution
+from .place_sphere import ControlPlaceSphereMediumSolution
+from .stack_cube import ControlStackCubeMediumSolution
